@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TextTranslator</string>
+    <string name="titulo">Tradutor Visual</string>
+    <string name="btn_capturar">Capturar Foto</string>
+    <string name="btn_galeria">Selecionar Galeria</string>
+    <string name="texto_extraido">Texto extraido aqui</string>
+    <string name="texto_traduzido">Texto traduzido aqui</string>
+</resources>

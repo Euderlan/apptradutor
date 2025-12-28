@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/titulo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/titulo"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/btnCapturar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_capturar"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/btnGaleria"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_galeria"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:id="@+id/textoExtraido"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="#f0f0f0"
+        android:padding="8dp"
+        android:text="@string/texto_extraido"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:id="@+id/textoTraduzido"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="#e8f5e9"
+        android:padding="8dp"
+        android:text="@string/texto_traduzido" />
+
+</LinearLayout>
