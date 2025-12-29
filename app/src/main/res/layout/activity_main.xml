@@ -19,7 +19,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/btn_capturar"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginBottom="8dp" />
 
     <Button
         android:id="@+id/btnGaleria"
@@ -29,12 +29,35 @@
         android:layout_marginBottom="16dp" />
 
     <TextView
+        android:id="@+id/textDetectedLanguage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Idioma detectado: -"
+        android:textSize="14sp"
+        android:textColor="#666666"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
         android:id="@+id/textoExtraido"
         android:layout_width="match_parent"
         android:layout_height="100dp"
         android:background="#f0f0f0"
         android:padding="8dp"
         android:text="@string/texto_extraido"
+        android:layout_marginBottom="16dp"
+        android:scrollbars="vertical" />
+
+    <Spinner
+        android:id="@+id/spinnerLanguage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/btntraduzir"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Traduzir"
         android:layout_marginBottom="16dp" />
 
     <TextView
@@ -43,6 +66,7 @@
         android:layout_height="100dp"
         android:background="#e8f5e9"
         android:padding="8dp"
-        android:text="@string/texto_traduzido" />
+        android:text="@string/texto_traduzido"
+        android:scrollbars="vertical" />
 
 </LinearLayout>
