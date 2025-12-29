@@ -98,8 +98,20 @@ class MainActivity : AppCompatActivity() {
         btnCapturar.setOnClickListener { pedirPermissaoCamera() }
         btnGaleria.setOnClickListener { pedirPermissaoGaleria() }
         btntraduzir.setOnClickListener {
-            val targetLanguage = spinnerLanguage.selectedItem.toString()
-            viewModel.translateText(targetLanguage)
+            val selectedLanguage = spinnerLanguage.selectedItem.toString()
+            val languageCode = when(selectedLanguage) {
+                "Português" -> "pt"
+                "Inglês" -> "en"
+                "Espanhol" -> "es"
+                "Francês" -> "fr"
+                "Alemão" -> "de"
+                "Italiano" -> "it"
+                "Japonês" -> "ja"
+                "Chinês" -> "zh"
+                "Russo" -> "ru"
+                else -> "en"
+            }
+            viewModel.translateText(languageCode)
         }
     }
 
@@ -135,6 +147,7 @@ class MainActivity : AppCompatActivity() {
             viewModel.error.collect { error ->
                 error?.let {
                     Toast.makeText(this@MainActivity, it, Toast.LENGTH_LONG).show()
+                    android.util.Log.e("TRADUCAO", "Erro: $it")  // ← ADICIONE ISTO
                 }
             }
         }

@@ -76,11 +76,4 @@ class TranslatorViewModel(
             }
         }
     }
-
-    fun resetState() {
-        _extractedText.value = ""
-        _detectedLanguage.value = null
-        _translatedText.value = ""
-        _error.value = null
-    }
 }
