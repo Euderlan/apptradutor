@@ -26,6 +26,7 @@ import com.example.texttranslatorapp.presentation.viewmodel.TranslatorViewModel
 import com.example.texttranslatorapp.util.ImageProcessor
 import com.example.texttranslatorapp.util.PermissionManager
 import kotlinx.coroutines.launch
+import android.widget.ArrayAdapter
 
 class MainActivity : AppCompatActivity() {
 
@@ -63,9 +64,8 @@ class MainActivity : AppCompatActivity() {
         textoExtraido = findViewById(R.id.textoExtraido)
         textoTraduzido = findViewById(R.id.textoTraduzido)
         textDetectedLanguage = findViewById(R.id.textDetectedLanguage)
-
-        // Adicione spinnerLanguage ao layout antes de usar aqui
-        // spinnerLanguage = findViewById(R.id.spinnerLanguage)
+        btntraduzir = findViewById(R.id.btntraduzir)  // ← ADICIONE ISTO
+        spinnerLanguage = findViewById(R.id.spinnerLanguage)  // ← E ISTO
     }
 
     private fun initializeManagers() {
@@ -88,13 +88,17 @@ class MainActivity : AppCompatActivity() {
         val translateTextUC = TranslateTextUseCase(translationRepo)
 
         viewModel = TranslatorViewModel(extractTextUC, detectLanguageUC, translateTextUC)
+        val idiomas = arrayOf("Português", "Inglês", "Espanhol", "Francês", "Alemão", "Italiano", "Japonês", "Chinês", "Russo")
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, idiomas)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerLanguage.adapter = adapter
     }
 
     private fun setupListeners() {
         btnCapturar.setOnClickListener { pedirPermissaoCamera() }
         btnGaleria.setOnClickListener { pedirPermissaoGaleria() }
         btntraduzir.setOnClickListener {
-            val targetLanguage = "en" // Obter do spinner
+            val targetLanguage = spinnerLanguage.selectedItem.toString()
             viewModel.translateText(targetLanguage)
         }
     }
@@ -130,7 +134,7 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             viewModel.error.collect { error ->
                 error?.let {
-                    Toast.makeText(this@MainActivity, it, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, it, Toast.LENGTH_LONG).show()
                 }
             }
         }
