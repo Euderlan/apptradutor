@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#121212"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- CABEÇALHO -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Selecionar Texto"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF" />
+
+        </LinearLayout>
+
+        <!-- STATUS DE CARREGAMENTO -->
+        <TextView
+            android:id="@+id/loadingText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Extraindo texto..."
+            android:textSize="12sp"
+            android:textColor="#AAAAAA"
+            android:layout_marginBottom="12dp"
+            android:paddingLeft="8dp" />
+
+        <!-- IMAGEM CAPTURADA -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:background="@drawable/rounded_box_dark"
+            android:layout_marginBottom="16dp">
+
+            <ImageView
+                android:id="@+id/imgCapturada"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerInside"
+                android:contentDescription="Imagem capturada" />
+
+        </FrameLayout>
+
+        <!-- IDIOMA DETECTADO -->
+        <TextView
+            android:id="@+id/textDetectado"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Idioma detectado: -"
+            android:textSize="14sp"
+            android:textColor="#AAAAAA"
+            android:layout_marginBottom="12dp"
+            android:paddingLeft="8dp" />
+
+        <!-- LABEL PARA TEXTO EXTRAÍDO -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Texto Extraído (edite conforme necessário):"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="8dp"
+            android:paddingLeft="4dp" />
+
+        <!-- CAMPO DE EDIÇÃO DO TEXTO EXTRAÍDO -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:background="@drawable/rounded_box_dark"
+            android:layout_marginBottom="16dp">
+
+            <EditText
+                android:id="@+id/editTextSelecionado"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="16dp"
+                android:hint="Selecione ou edite o texto aqui"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#666666"
+                android:textSize="14sp"
+                android:background="@null"
+                android:inputType="textMultiLine"
+                android:gravity="top|start" />
+
+        </FrameLayout>
+
+        <!-- BOTÃO EXTRAIR TUDO -->
+        <Button
+            android:id="@+id/btnExtrairTudo"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="📋 Extrair Todo o Texto"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="12dp"
+            android:backgroundTint="#4A4A4A" />
+
+        <!-- BOTÕES DE AÇÃO -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="8dp">
+
+            <Button
+                android:id="@+id/btnCancelar"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="Cancelar"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:layout_marginRight="8dp"
+                android:backgroundTint="#5A5A5A" />
+
+            <Button
+                android:id="@+id/btnContinuar"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="Continuar"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#6C5CE7" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

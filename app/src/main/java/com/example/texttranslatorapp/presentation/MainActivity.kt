@@ -4,7 +4,11 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
+import android.text.Editable
+import android.text.TextWatcher
 import android.widget.Button
 import android.widget.Spinner
 import android.widget.EditText
@@ -23,6 +27,7 @@ import com.example.texttranslatorapp.data.repository.TranslationRepository
 import com.example.texttranslatorapp.domain.usecases.DetectLanguageUseCase
 import com.example.texttranslatorapp.domain.usecases.ExtractTextUseCase
 import com.example.texttranslatorapp.domain.usecases.TranslateTextUseCase
+import com.example.texttranslatorapp.presentation.viewmodel.SharedImageViewModel
 import com.example.texttranslatorapp.presentation.viewmodel.TranslatorViewModel
 import com.example.texttranslatorapp.util.ImageProcessor
 import com.example.texttranslatorapp.util.PermissionManager
@@ -34,19 +39,28 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnCapturar: Button
     private lateinit var btnGaleria: Button
     private lateinit var btntraduzir: Button
-    private lateinit var textoExtraido: EditText  // ← MUDADO PARA EditText
-    private lateinit var textoTraduzido: EditText  // ← MUDADO PARA EditText
+    private lateinit var textoExtraido: EditText
+    private lateinit var textoTraduzido: EditText
     private lateinit var spinnerLanguage: Spinner
     private lateinit var textDetectedLanguage: TextView
 
     private val REQUEST_CAMERA = 1
     private val REQUEST_GALERIA = 2
+    private val REQUEST_IMAGE_VIEWER = 3
     private val PERMISSION_CAMERA = 101
     private val PERMISSION_GALERIA = 102
 
     private lateinit var permissionManager: PermissionManager
     private lateinit var imageProcessor: ImageProcessor
     private lateinit var viewModel: TranslatorViewModel
+
+    // ✅ Flag para evitar atualizar ViewModel quando é apenas renderização
+    private var isUpdatingUI = false
+
+    // ✅ Handler e Runnable para debounce do TextWatcher
+    private val handler = Handler(Looper.getMainLooper())
+    private var textWatcherRunnable: Runnable? = null
+    private val DEBOUNCE_DELAY = 500L  // 500ms de delay
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,13 +71,14 @@ class MainActivity : AppCompatActivity() {
         initializeViewModel()
         setupListeners()
         observeViewModel()
+        setupTextWatcher()  // ✅ Adicionar listener de edição
     }
 
     private fun initializeViews() {
         btnCapturar = findViewById(R.id.btnCapturar)
         btnGaleria = findViewById(R.id.btnGaleria)
-        textoExtraido = findViewById(R.id.textoExtraido)  // ← EditText
-        textoTraduzido = findViewById(R.id.textoTraduzido)  // ← EditText
+        textoExtraido = findViewById(R.id.textoExtraido)
+        textoTraduzido = findViewById(R.id.textoTraduzido)
         textDetectedLanguage = findViewById(R.id.textDetectedLanguage)
         btntraduzir = findViewById(R.id.btntraduzir)
         spinnerLanguage = findViewById(R.id.spinnerLanguage)
@@ -75,7 +90,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initializeViewModel() {
-        // Inicializar repositórios e use cases
         val textExtractor = MLKitTextExtractor()
         val languageDetector = MLKitLanguageDetector()
         val translationService = TranslationApiService()
@@ -90,7 +104,6 @@ class MainActivity : AppCompatActivity() {
 
         viewModel = TranslatorViewModel(extractTextUC, detectLanguageUC, translateTextUC)
 
-        // Configurar Spinner
         val idiomas = arrayOf("Português", "Inglês", "Espanhol", "Francês", "Alemão", "Italiano", "Japonês", "Chinês", "Russo")
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, idiomas)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -102,62 +115,96 @@ class MainActivity : AppCompatActivity() {
         btnGaleria.setOnClickListener { pedirPermissaoGaleria() }
         btntraduzir.setOnClickListener {
             val selectedLanguage = spinnerLanguage.selectedItem.toString()
-            val languageCode = when(selectedLanguage) {
-                "Português" -> "pt"
-                "Inglês" -> "en"
-                "Espanhol" -> "es"
-                "Francês" -> "fr"
-                "Alemão" -> "de"
-                "Italiano" -> "it"
-                "Japonês" -> "ja"
-                "Chinês" -> "zh"
-                "Russo" -> "ru"
-                else -> "en"
-            }
-            // ← AGORA USA O TEXTO DO EditText
+            val languageCode = getLanguageCode(selectedLanguage)
             val textToTranslate = textoExtraido.text.toString()
+
+            android.util.Log.d("TRADUCAO_DEBUG", "Texto a traduzir: '$textToTranslate'")
+            android.util.Log.d("TRADUCAO_DEBUG", "Idioma alvo: $selectedLanguage ($languageCode)")
+
             if (textToTranslate.isEmpty()) {
-                Toast.makeText(this, "Por favor, extraia um texto primeiro", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Por favor, digite ou selecione um texto para traduzir", Toast.LENGTH_SHORT).show()
             } else {
+                // ✅ Atualizar texto no ViewModel antes de traduzir
+                viewModel.updateExtractedText(textToTranslate)
                 viewModel.translateText(languageCode)
             }
         }
     }
 
+    // ✅ TextWatcher com debounce para sincronizar edições do usuário
+    private fun setupTextWatcher() {
+        textoExtraido.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                // ✅ Quando o usuário termina de digitar, sincroniza com o ViewModel
+                if (!isUpdatingUI && s != null) {
+                    // Remover callback anterior se existir
+                    textWatcherRunnable?.let { handler.removeCallbacks(it) }
+
+                    // Criar novo callback com delay
+                    textWatcherRunnable = Runnable {
+                        val textoAtual = s.toString()
+                        viewModel.updateExtractedText(textoAtual)
+                        android.util.Log.d("TEXT_WATCHER", "Texto editado e sincronizado (com debounce): '$textoAtual'")
+                    }
+
+                    // Postar com delay de 500ms
+                    handler.postDelayed(textWatcherRunnable!!, DEBOUNCE_DELAY)
+                }
+            }
+        })
+    }
+
     private fun observeViewModel() {
+        // Observar texto extraído
         lifecycleScope.launch {
             viewModel.extractedText.collect { text ->
-                textoExtraido.setText(text)  // ← EditText.setText()
+                isUpdatingUI = true
+                textoExtraido.setText(text)
+                // ✅ Colocar cursor no final
+                textoExtraido.setSelection(text.length)
+                isUpdatingUI = false
+                android.util.Log.d("TRADUCAO_DEBUG", "extractedText atualizado: '$text'")
             }
         }
 
+        // Observar idioma detectado
         lifecycleScope.launch {
             viewModel.detectedLanguage.collect { detection ->
                 detection?.let {
                     textDetectedLanguage.text = "Idioma detectado: ${it.detectedLanguage}"
+                    android.util.Log.d("TRADUCAO_DEBUG", "Idioma detectado: ${it.detectedLanguage} (${it.languageCode})")
                 }
             }
         }
 
+        // Observar texto traduzido
         lifecycleScope.launch {
             viewModel.translatedText.collect { text ->
-                textoTraduzido.setText(text)  // ← EditText.setText()
+                textoTraduzido.setText(text)
+                android.util.Log.d("TRADUCAO_DEBUG", "translatedText atualizado: '$text'")
             }
         }
 
+        // Observar estado de loading
         lifecycleScope.launch {
             viewModel.isLoading.collect { isLoading ->
                 btnCapturar.isEnabled = !isLoading
                 btnGaleria.isEnabled = !isLoading
                 btntraduzir.isEnabled = !isLoading
+                android.util.Log.d("TRADUCAO_DEBUG", "isLoading: $isLoading")
             }
         }
 
+        // Observar erros
         lifecycleScope.launch {
             viewModel.error.collect { error ->
                 error?.let {
                     Toast.makeText(this@MainActivity, it, Toast.LENGTH_LONG).show()
-                    android.util.Log.e("TRADUCAO", "Erro: $it")
+                    android.util.Log.e("TRADUCAO_ERROR", "Erro: $it")
                 }
             }
         }
@@ -238,20 +285,80 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (resultCode == RESULT_OK && data != null) {
-            val bitmap = when (requestCode) {
-                REQUEST_CAMERA -> data.extras?.get("data") as? Bitmap
-                REQUEST_GALERIA -> {
-                    val uri = data.data
-                    MediaStore.Images.Media.getBitmap(contentResolver, uri)
+        when (requestCode) {
+            // ========== RETORNO DA ImageViewerActivity ==========
+            REQUEST_IMAGE_VIEWER -> {
+                if (resultCode == RESULT_OK && data != null) {
+                    // ✅ Receber dados da ImageViewerActivity
+                    val textoSelecionado = data.getStringExtra("texto_selecionado") ?: ""
+                    val idiomaDetectado = data.getStringExtra("idioma_detectado") ?: ""
+
+                    android.util.Log.d("ACTIVITY_RESULT", "Texto recebido: '$textoSelecionado'")
+                    android.util.Log.d("ACTIVITY_RESULT", "Idioma: $idiomaDetectado")
+
+                    // ✅ IMPORTANTE: Atualizar ViewModel com os dados recebidos
+                    viewModel.setExtractedText(textoSelecionado, idiomaDetectado)
+
+                    // Limpar bitmap compartilhado
+                    SharedImageViewModel.imagemCompartilhada = null
+                } else {
+                    // Usuário cancelou
+                    SharedImageViewModel.imagemCompartilhada = null
                 }
-                else -> null
             }
 
-            bitmap?.let {
-                val compressedBitmap = imageProcessor.compressBitmap(it)
-                viewModel.processImage(compressedBitmap)
+            // ========== RETORNO DA CÂMERA ==========
+            REQUEST_CAMERA -> {
+                if (resultCode == RESULT_OK && data != null) {
+                    val bitmap = data.extras?.get("data") as? Bitmap
+                    bitmap?.let { processarImagem(it) }
+                }
+            }
+
+            // ========== RETORNO DA GALERIA ==========
+            REQUEST_GALERIA -> {
+                if (resultCode == RESULT_OK && data != null) {
+                    val uri = data.data
+                    if (uri != null) {
+                        val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, uri)
+                        processarImagem(bitmap)
+                    }
+                }
             }
         }
+    }
+
+    // ========== HELPER: Processar imagem capturada ==========
+    private fun processarImagem(bitmap: Bitmap) {
+        val compressedBitmap = imageProcessor.compressBitmap(bitmap)
+
+        // Salvar no ViewModel compartilhado
+        SharedImageViewModel.imagemCompartilhada = compressedBitmap
+
+        // Abrir ImageViewerActivity
+        val intent = Intent(this, ImageViewerActivity::class.java)
+        startActivityForResult(intent, REQUEST_IMAGE_VIEWER)
+    }
+
+    private fun getLanguageCode(languageName: String): String {
+        return when(languageName) {
+            "Português" -> "pt"
+            "Inglês" -> "en"
+            "Espanhol" -> "es"
+            "Francês" -> "fr"
+            "Alemão" -> "de"
+            "Italiano" -> "it"
+            "Japonês" -> "ja"
+            "Chinês" -> "zh"
+            "Russo" -> "ru"
+            else -> "en"
+        }
+    }
+
+    // ========== Cleanup ==========
+    override fun onDestroy() {
+        super.onDestroy()
+        // Remover callbacks pendentes
+        textWatcherRunnable?.let { handler.removeCallbacks(it) }
     }
 }
