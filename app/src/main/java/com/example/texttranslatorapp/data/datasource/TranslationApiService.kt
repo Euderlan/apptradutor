@@ -1,6 +1,9 @@
 package com.example.texttranslatorapp.data.datasource
 
 import com.example.texttranslatorapp.domain.models.TranslationResult
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.net.URLEncoder
 
 class TranslationApiService {
 
@@ -9,30 +12,74 @@ class TranslationApiService {
         sourceLanguage: String,
         targetLanguage: String
     ): TranslationResult {
-        // Dicionário simples de tradução
-        val dictionary = mapOf(
-            "olá" to "hello",
-            "oi" to "hi",
-            "obrigado" to "thank you",
-            "por favor" to "please",
-            "sim" to "yes",
-            "não" to "no",
-            "água" to "water",
-            "casa" to "house",
-            "carro" to "car",
-            "comida" to "food"
-        )
+        return withContext(Dispatchers.IO) {
+            try {
+                // Converter nomes para códigos de idioma
+                val sourceLangCode = getLanguageCode(sourceLanguage)
+                val targetLangCode = getLanguageCode(targetLanguage)
 
-        val words = text.lowercase().split(" ")
-        val translated = words.map { word ->
-            dictionary[word] ?: word
-        }.joinToString(" ")
+                // URL da API de tradução (MyMemory - Grátis)
+                val encodedText = URLEncoder.encode(text, "UTF-8")
+                val url = "https://api.mymemory.translated.net/get?q=$encodedText&langpair=$sourceLangCode|$targetLangCode"
 
-        return TranslationResult(
-            originalText = text,
-            translatedText = translated,
-            sourceLanguage = sourceLanguage,
-            targetLanguage = targetLanguage
-        )
+                // Fazer requisição
+                val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+                connection.requestMethod = "GET"
+                connection.connectTimeout = 5000
+                connection.readTimeout = 5000
+
+                val responseCode = connection.responseCode
+                if (responseCode == 200) {
+                    val response = connection.inputStream.bufferedReader().use { it.readText() }
+
+                    // Parse JSON simples
+                    val translatedText = extractTranslatedText(response)
+
+                    TranslationResult(
+                        originalText = text,
+                        translatedText = translatedText,
+                        sourceLanguage = sourceLanguage,
+                        targetLanguage = targetLanguage
+                    )
+                } else {
+                    throw Exception("Erro na tradução: código $responseCode")
+                }
+            } catch (e: Exception) {
+                throw Exception("Erro ao traduzir: ${e.message}")
+            }
+        }
+    }
+
+    private fun extractTranslatedText(jsonResponse: String): String {
+        return try {
+            // Extrair o valor de "translatedText" do JSON
+            val startIndex = jsonResponse.indexOf("\"translatedText\":\"") + 18
+            val endIndex = jsonResponse.indexOf("\"", startIndex)
+
+            if (startIndex > 18 && endIndex > startIndex) {
+                jsonResponse.substring(startIndex, endIndex)
+                    .replace("\\n", "\n")
+                    .replace("\\\"", "\"")
+            } else {
+                "Erro ao processar tradução"
+            }
+        } catch (e: Exception) {
+            "Erro: ${e.message}"
+        }
+    }
+
+    private fun getLanguageCode(languageName: String): String {
+        return when (languageName.lowercase()) {
+            "português", "pt" -> "pt"
+            "inglês", "en" -> "en"
+            "espanhol", "es" -> "es"
+            "francês", "fr" -> "fr"
+            "alemão", "de" -> "de"
+            "italiano", "it" -> "it"
+            "japonês", "ja" -> "ja"
+            "chinês", "zh" -> "zh"
+            "russo", "ru" -> "ru"
+            else -> "en"
+        }
     }
 }

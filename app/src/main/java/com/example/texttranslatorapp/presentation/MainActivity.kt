@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Button
 import android.widget.Spinner
+import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -33,8 +34,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnCapturar: Button
     private lateinit var btnGaleria: Button
     private lateinit var btntraduzir: Button
-    private lateinit var textoExtraido: TextView
-    private lateinit var textoTraduzido: TextView
+    private lateinit var textoExtraido: EditText  // ← MUDADO PARA EditText
+    private lateinit var textoTraduzido: EditText  // ← MUDADO PARA EditText
     private lateinit var spinnerLanguage: Spinner
     private lateinit var textDetectedLanguage: TextView
 
@@ -61,11 +62,11 @@ class MainActivity : AppCompatActivity() {
     private fun initializeViews() {
         btnCapturar = findViewById(R.id.btnCapturar)
         btnGaleria = findViewById(R.id.btnGaleria)
-        textoExtraido = findViewById(R.id.textoExtraido)
-        textoTraduzido = findViewById(R.id.textoTraduzido)
+        textoExtraido = findViewById(R.id.textoExtraido)  // ← EditText
+        textoTraduzido = findViewById(R.id.textoTraduzido)  // ← EditText
         textDetectedLanguage = findViewById(R.id.textDetectedLanguage)
-        btntraduzir = findViewById(R.id.btntraduzir)  // ← ADICIONE ISTO
-        spinnerLanguage = findViewById(R.id.spinnerLanguage)  // ← E ISTO
+        btntraduzir = findViewById(R.id.btntraduzir)
+        spinnerLanguage = findViewById(R.id.spinnerLanguage)
     }
 
     private fun initializeManagers() {
@@ -88,6 +89,8 @@ class MainActivity : AppCompatActivity() {
         val translateTextUC = TranslateTextUseCase(translationRepo)
 
         viewModel = TranslatorViewModel(extractTextUC, detectLanguageUC, translateTextUC)
+
+        // Configurar Spinner
         val idiomas = arrayOf("Português", "Inglês", "Espanhol", "Francês", "Alemão", "Italiano", "Japonês", "Chinês", "Russo")
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, idiomas)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -111,14 +114,20 @@ class MainActivity : AppCompatActivity() {
                 "Russo" -> "ru"
                 else -> "en"
             }
-            viewModel.translateText(languageCode)
+            // ← AGORA USA O TEXTO DO EditText
+            val textToTranslate = textoExtraido.text.toString()
+            if (textToTranslate.isEmpty()) {
+                Toast.makeText(this, "Por favor, extraia um texto primeiro", Toast.LENGTH_SHORT).show()
+            } else {
+                viewModel.translateText(languageCode)
+            }
         }
     }
 
     private fun observeViewModel() {
         lifecycleScope.launch {
             viewModel.extractedText.collect { text ->
-                textoExtraido.text = text.ifEmpty { "Nenhum texto extraído" }
+                textoExtraido.setText(text)  // ← EditText.setText()
             }
         }
 
@@ -132,7 +141,7 @@ class MainActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             viewModel.translatedText.collect { text ->
-                textoTraduzido.text = text.ifEmpty { "Tradução aparecerá aqui" }
+                textoTraduzido.setText(text)  // ← EditText.setText()
             }
         }
 
@@ -140,6 +149,7 @@ class MainActivity : AppCompatActivity() {
             viewModel.isLoading.collect { isLoading ->
                 btnCapturar.isEnabled = !isLoading
                 btnGaleria.isEnabled = !isLoading
+                btntraduzir.isEnabled = !isLoading
             }
         }
 
@@ -147,7 +157,7 @@ class MainActivity : AppCompatActivity() {
             viewModel.error.collect { error ->
                 error?.let {
                     Toast.makeText(this@MainActivity, it, Toast.LENGTH_LONG).show()
-                    android.util.Log.e("TRADUCAO", "Erro: $it")  // ← ADICIONE ISTO
+                    android.util.Log.e("TRADUCAO", "Erro: $it")
                 }
             }
         }

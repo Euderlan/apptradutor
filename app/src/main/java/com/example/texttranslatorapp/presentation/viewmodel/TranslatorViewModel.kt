@@ -56,21 +56,28 @@ class TranslatorViewModel(
         }
     }
 
-    fun translateText(targetLanguage: String) {
+    fun translateText(targetLanguageCode: String) {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
 
             try {
-                val sourceLanguage = _detectedLanguage.value?.languageCode ?: "en"
+                val sourceLanguage = _detectedLanguage.value?.detectedLanguage ?: "English"
+                val textToTranslate = _extractedText.value
+
+                if (textToTranslate.isEmpty()) {
+                    _error.value = "Nenhum texto para traduzir"
+                    return@launch
+                }
+
                 val result = translateTextUseCase(
-                    _extractedText.value,
+                    textToTranslate,
                     sourceLanguage,
-                    targetLanguage
+                    targetLanguageCode
                 )
                 _translatedText.value = result.translatedText
             } catch (e: Exception) {
-                _error.value = e.message ?: "Erro ao traduzir"
+                _error.value = "Erro ao traduzir: ${e.message}"
             } finally {
                 _isLoading.value = false
             }

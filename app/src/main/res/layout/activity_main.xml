@@ -1,72 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:fillViewport="true"
+    android:fitsSystemWindows="true"
+    android:background="#121212">
 
-    <TextView
-        android:id="@+id/titulo"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Tradutor Visual"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="16dp" />
+        android:orientation="vertical"
+        android:padding="16dp">
 
-    <Button
-        android:id="@+id/btnCapturar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Capturar Foto"
-        android:layout_marginBottom="8dp" />
+        <!-- CABEÇALHO -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="24dp">
 
-    <Button
-        android:id="@+id/btnGaleria"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Selecionar Galeria"
-        android:layout_marginBottom="16dp" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="TradutorDD"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF" />
 
-    <TextView
-        android:id="@+id/textDetectedLanguage"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Idioma detectado: -"
-        android:textSize="14sp"
-        android:textColor="#666666"
-        android:layout_marginBottom="8dp" />
+        </LinearLayout>
 
-    <TextView
-        android:id="@+id/textoExtraido"
-        android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:background="#f0f0f0"
-        android:padding="8dp"
-        android:text="Texto extraido aqui"
-        android:layout_marginBottom="16dp"
-        android:scrollbars="vertical" />
+        <!-- CAIXA DE TEXTO EXTRAÍDO -->
+        <include layout="@layout/include_text_box" />
 
-    <Spinner
-        android:id="@+id/spinnerLanguage"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp" />
+        <!-- BOTÕES CÂMERA E GALERIA -->
+        <include layout="@layout/include_buttons_capture" />
 
-    <Button
-        android:id="@+id/btntraduzir"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Traduzir"
-        android:layout_marginBottom="16dp" />
+        <!-- IDIOMA DETECTADO -->
+        <TextView
+            android:id="@+id/textDetectedLanguage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Idioma detectado: -"
+            android:textSize="14sp"
+            android:textColor="#AAAAAA"
+            android:layout_marginBottom="20dp"
+            android:paddingLeft="8dp" />
 
-    <TextView
-        android:id="@+id/textoTraduzido"
-        android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:background="#e8f5e9"
-        android:padding="8dp"
-        android:text="Texto traduzido aqui"
-        android:scrollbars="vertical" />
+        <!-- SELEÇÃO DE IDIOMA -->
+        <include layout="@layout/include_language_selector" />
 
-</LinearLayout>
+        <!-- BOTÃO TRADUZIR -->
+        <Button
+            android:id="@+id/btntraduzir"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Traduzir"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="20dp"
+            android:backgroundTint="#6C5CE7" />
+
+        <!-- CAIXA DE RESULTADO -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="140dp"
+            android:background="@drawable/rounded_box_dark">
+
+            <EditText
+                android:id="@+id/textoTraduzido"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="16dp"
+                android:hint="Tradução aparecerá aqui"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#999999"
+                android:textSize="16sp"
+                android:background="@null"
+                android:inputType="textMultiLine"
+                android:gravity="top|start" />
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+</ScrollView>
