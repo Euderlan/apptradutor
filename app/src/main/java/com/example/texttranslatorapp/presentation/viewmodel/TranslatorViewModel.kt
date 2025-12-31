@@ -6,7 +6,6 @@ import com.example.texttranslatorapp.domain.usecases.DetectLanguageUseCase
 import com.example.texttranslatorapp.domain.usecases.ExtractTextUseCase
 import com.example.texttranslatorapp.domain.usecases.TranslateTextUseCase
 import com.example.texttranslatorapp.domain.models.DetectionResult
-import com.example.texttranslatorapp.domain.models.TranslationResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -24,6 +23,14 @@ class TranslatorViewModel(
 
     private val _detectedLanguage = MutableStateFlow<DetectionResult?>(null)
     val detectedLanguage: StateFlow<DetectionResult?> = _detectedLanguage
+
+    // ✅ Idioma de origem (selecionado/detectado)
+    private val _sourceLanguage = MutableStateFlow("Inglês")
+    val sourceLanguage: StateFlow<String> = _sourceLanguage
+
+    // ✅ Idioma de destino
+    private val _targetLanguage = MutableStateFlow("Português")
+    val targetLanguage: StateFlow<String> = _targetLanguage
 
     private val _translatedText = MutableStateFlow("")
     val translatedText: StateFlow<String> = _translatedText
@@ -49,6 +56,7 @@ class TranslatorViewModel(
                 if (text.isNotEmpty()) {
                     val detection = detectLanguageUseCase(text)
                     _detectedLanguage.value = detection
+                    _sourceLanguage.value = detection.detectedLanguage
                     Log.d("ViewModel", "Idioma detectado: ${detection.detectedLanguage}")
                 }
             } catch (e: Exception) {
@@ -60,95 +68,73 @@ class TranslatorViewModel(
         }
     }
 
-    // ✅ Função para atualizar texto extraído manualmente (vindo da ImageViewerActivity)
     fun setExtractedText(text: String, detectedLanguage: String? = null) {
         _extractedText.value = text
-        Log.d("ViewModel", "Texto atualizado (setExtractedText): '$text'")
+        Log.d("ViewModel", "Texto atualizado: '$text'")
 
         if (detectedLanguage != null) {
-            // Criar um DetectionResult com o idioma fornecido
-            val languageCode = getLanguageCode(detectedLanguage)
             _detectedLanguage.value = DetectionResult(
                 detectedLanguage = detectedLanguage,
                 confidence = 1.0f,
-                languageCode = languageCode
+                languageCode = getLanguageCode(detectedLanguage)
             )
-            Log.d("ViewModel", "Idioma definido: $detectedLanguage ($languageCode)")
+            _sourceLanguage.value = detectedLanguage
+            Log.d("ViewModel", "Idioma definido: $detectedLanguage")
         }
     }
 
-    // ✅ NOVO: Função para atualizar texto enquanto o usuário edita
-    // Não detecta idioma de novo, apenas atualiza o texto
     fun updateExtractedText(text: String) {
         _extractedText.value = text
-        Log.d("ViewModel", "Texto atualizado (updateExtractedText): '$text'")
-        // Não faz detecção de novo, mantém o idioma anterior
+        Log.d("ViewModel", "Texto atualizado: '$text'")
     }
 
-    // ✅ Função para detectar idioma de texto manualmente inserido
-    fun detectLanguageForText(text: String) {
+    // ✅ NOVO: Função para atualizar idioma de origem manualmente
+    fun setSourceLanguage(language: String) {
+        _sourceLanguage.value = language
+        Log.d("ViewModel", "Idioma de origem atualizado: $language")
+    }
+
+    // ✅ NOVO: Função para atualizar idioma de destino manualmente
+    fun setTargetLanguage(language: String) {
+        _targetLanguage.value = language
+        Log.d("ViewModel", "Idioma de destino atualizado: $language")
+    }
+
+    // ✅ NOVO: Inverter idiomas
+    fun swapLanguages() {
+        val temp = _sourceLanguage.value
+        _sourceLanguage.value = _targetLanguage.value
+        _targetLanguage.value = temp
+        Log.d("ViewModel", "Idiomas invertidos: ${_sourceLanguage.value} <-> ${_targetLanguage.value}")
+    }
+
+    // ✅ Traduzir com idiomas atuais
+    fun translateText() {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
 
             try {
-                if (text.isNotEmpty()) {
-                    val detection = detectLanguageUseCase(text)
-                    _detectedLanguage.value = detection
-                    Log.d("ViewModel", "Idioma detectado para texto: ${detection.detectedLanguage}")
-                }
-            } catch (e: Exception) {
-                _error.value = e.message ?: "Erro ao detectar idioma"
-                Log.e("ViewModel", "Erro ao detectar idioma: ${e.message}")
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
-    fun translateText(targetLanguageCode: String) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            _error.value = null
-
-            try {
-                // ✅ IMPORTANTE: Pegar o idioma de origem do ViewModel
-                val sourceLanguageName = _detectedLanguage.value?.detectedLanguage
-                val sourceLanguageCode = _detectedLanguage.value?.languageCode
-
-                Log.d("ViewModel", "Idioma de origem: $sourceLanguageName ($sourceLanguageCode)")
-                Log.d("ViewModel", "Idioma alvo: $targetLanguageCode")
-
                 val textToTranslate = _extractedText.value
+                val sourceLang = _sourceLanguage.value
+                val targetLang = _targetLanguage.value
 
-                Log.d("ViewModel", "Texto a traduzir: '$textToTranslate'")
+                Log.d("ViewModel", "Traduzindo de '$sourceLang' para '$targetLang'")
+                Log.d("ViewModel", "Texto: '$textToTranslate'")
 
                 if (textToTranslate.isEmpty()) {
                     _error.value = "Nenhum texto para traduzir"
-                    Log.e("ViewModel", "Erro: Nenhum texto para traduzir")
                     return@launch
                 }
 
-                // ✅ Usar o nome do idioma (ex: "Português") como sourceLanguage
-                val sourceLangName = sourceLanguageName ?: "English"
-
-                Log.d("ViewModel", "Chamando translateTextUseCase com:")
-                Log.d("ViewModel", "  - Texto: '$textToTranslate'")
-                Log.d("ViewModel", "  - Idioma origem: '$sourceLangName'")
-                Log.d("ViewModel", "  - Idioma alvo: '$targetLanguageCode'")
-
-                val result = translateTextUseCase(
-                    textToTranslate,
-                    sourceLangName,
-                    targetLanguageCode
-                )
-
+                val result = translateTextUseCase(textToTranslate, sourceLang, targetLang)
                 _translatedText.value = result.translatedText
+
                 Log.d("ViewModel", "Tradução concluída: '${result.translatedText}'")
 
             } catch (e: Exception) {
                 _error.value = "Erro ao traduzir: ${e.message}"
-                Log.e("ViewModel", "Erro ao traduzir: ${e.message}", e)
+                Log.e("ViewModel", "Erro: ${e.message}", e)
             } finally {
                 _isLoading.value = false
             }
