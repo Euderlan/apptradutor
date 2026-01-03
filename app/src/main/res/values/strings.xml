@@ -6,4 +6,25 @@
     <string name="btn_galeria">Selecionar Galeria</string>
     <string name="texto_extraido">Texto extraido aqui</string>
     <string name="texto_traduzido">Texto traduzido aqui</string>
+
+    <!-- ImageViewerActivity - UI -->
+    <string name="cancelar_selecao">Cancelar Seleção</string>
+    <string name="ativar_selecao">✂️ Ativar Seleção de Área</string>
+    <string name="modo_crop_ativo">Modo crop ativo - arraste para selecionar</string>
+    <string name="arraste_para_selecionar">Arraste para selecionar a área</string>
+    <string name="pronto">Pronto</string>
+
+    <!-- ImageViewerActivity - Messages -->
+    <string name="selecione_area_primeiro">Por favor, selecione uma área primeiro</string>
+    <string name="selecione_texto">Por favor, selecione algum texto</string>
+    <string name="idioma_padrao">Inglês</string>
+    <string name="extraindo_selecao">Extraindo texto da seleção...</string>
+    <string name="texto_extraido_sucesso">Texto extraído com sucesso</string>
+
+    <!-- ImageViewerActivity - Error Messages (com placeholders) -->
+    <string name="erro_imagem_nao_recebida">Erro: Imagem não recebida</string>
+    <string name="erro_com_mensagem">Erro: %1$s</string>
+    <string name="idioma_detectado_com_valor">Idioma detectado: %1$s</string>
+    <string name="erro_extrair">Erro ao extrair</string>
+    <string name="erro_desconhecido">Erro desconhecido</string>
 </resources>

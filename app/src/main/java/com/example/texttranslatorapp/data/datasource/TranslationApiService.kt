@@ -1,6 +1,7 @@
 package com.example.texttranslatorapp.data.datasource
 
 import com.example.texttranslatorapp.domain.models.TranslationResult
+import com.example.texttranslatorapp.presentation.utils.UnicodeDecoder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.URLEncoder
@@ -33,7 +34,12 @@ class TranslationApiService {
                     val response = connection.inputStream.bufferedReader().use { it.readText() }
 
                     // Parse JSON simples
-                    val translatedText = extractTranslatedText(response)
+                    var translatedText = extractTranslatedText(response)
+
+                    // Decodificar Unicode escapado se necessário
+                    if (UnicodeDecoder.hasEscapedUnicode(translatedText)) {
+                        translatedText = UnicodeDecoder.decode(translatedText)
+                    }
 
                     TranslationResult(
                         originalText = text,
