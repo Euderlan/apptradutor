@@ -49,36 +49,57 @@ class TranslatorViewModel(
     val error: StateFlow<String?> = _error
 
     fun processImage(bitmap: Bitmap) {
-        // viewModelScope.launch garante que a corrotina respeita o ciclo de vida do ViewModel.
         viewModelScope.launch {
-            // Inicia estado de carregamento e limpa erro anterior.
             _isLoading.value = true
             _error.value = null
 
             try {
-                // Executa OCR via UseCase (provavelmente ML Kit por trás).
-                val text = extractTextUseCase(bitmap)
-                _extractedText.value = text
-                Log.d("ViewModel", "Texto extraído da imagem: '$text'")
+                // Otimizar imagem ANTES de processar
+                val imagemOtimizada = otimizarImagemParaOCR(bitmap)
 
-                // Só tenta detectar idioma se houver conteúdo.
+                val text = extractTextUseCase(imagemOtimizada)
+                _extractedText.value = text
+                Log.d("ViewModel", "Texto extraído: '$text'")
+
                 if (text.isNotEmpty()) {
                     val detection = detectLanguageUseCase(text)
                     _detectedLanguage.value = detection
-
-                    // Atualiza idioma de origem com o idioma detectado para alinhar com a UI/fluxo de tradução.
                     _sourceLanguage.value = detection.detectedLanguage
-                    Log.d("ViewModel", "Idioma detectado: ${detection.detectedLanguage}")
+                    Log.d("ViewModel", "Idioma: ${detection.detectedLanguage}")
                 }
             } catch (e: Exception) {
-                // Centraliza erro para a UI e registra log.
                 _error.value = e.message ?: "Erro desconhecido"
-                Log.e("ViewModel", "Erro ao processar imagem: ${e.message}")
+                Log.e("ViewModel", "Erro: ${e.message}")
             } finally {
-                // Sempre encerra loading (sucesso ou falha).
                 _isLoading.value = false
             }
         }
+    }
+
+    private fun otimizarImagemParaOCR(bitmap: Bitmap): Bitmap {
+        val width = bitmap.width
+        val height = bitmap.height
+
+        // Se imagem já está pequena, NÃO reduz
+        if (width < 1200 || height < 1200) {
+            Log.d("OPTIMIZE", "Imagem pequena, não otimizando")
+            return bitmap  // ← Retorna como está
+        }
+
+        // Só reduz se MUITO grande
+        val maxDimension = 2000
+        val ratio = if (width > height) {
+            maxDimension.toFloat() / width
+        } else {
+            maxDimension.toFloat() / height
+        }
+
+        val novaLargura = (width * ratio).toInt()
+        val novaAltura = (height * ratio).toInt()
+
+        Log.d("OPTIMIZE", "Original: ${width}x${height} → Otimizado: ${novaLargura}x${novaAltura}")
+
+        return Bitmap.createScaledBitmap(bitmap, novaLargura, novaAltura, true)
     }
 
     fun setExtractedText(text: String, detectedLanguage: String? = null) {

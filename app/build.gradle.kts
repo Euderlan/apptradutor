@@ -56,16 +56,49 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.1")
 
+    // ============================================
+    // ML KIT - RECONHECIMENTO DE TEXTO
+    // ============================================
+
+    // OCR Latin (Português, Inglês, Espanhol, Francês, Alemão, Italiano, Russo)
     implementation("com.google.mlkit:text-recognition:16.0.0")
+
+    // OCR Japonês (Hiragana, Katakana, Kanji)
+    // ⚠️ Requer ~2MB no APK
+    implementation("com.google.mlkit:text-recognition-japanese:16.0.0")
+
+    // OCR Chinês (Simplificado e Tradicional)
+    // ⚠️ Requer ~2MB no APK
+    implementation("com.google.mlkit:text-recognition-chinese:16.0.0")
+
+    // OCR Coreano (Hangul)
+    // ⚠️ Requer ~1.5MB no APK
+    implementation("com.google.mlkit:text-recognition-korean:16.0.0")
+
+    // OCR Devanagari (Hindi, Sânscrito, Marathi, Nepali)
+    // ⚠️ Requer ~1.5MB no APK
+    implementation("com.google.mlkit:text-recognition-devanagari:16.0.0")
+
+    // Detecção de Idioma
     implementation("com.google.mlkit:language-id:17.0.0")
+
+    // Tradução
     implementation("com.google.mlkit:translate:16.0.0")
+
+    // Comum (necessário para todos)
     implementation("com.google.mlkit:common:18.8.0")
 
+    // ============================================
+    // NETWORKING & JSON
+    // ============================================
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
 
+    // ============================================
+    // TESTES
+    // ============================================
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
 }

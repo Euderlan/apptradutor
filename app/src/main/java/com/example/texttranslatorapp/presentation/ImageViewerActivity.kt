@@ -25,6 +25,8 @@ import com.example.texttranslatorapp.presentation.viewmodel.SharedImageViewModel
 import com.example.texttranslatorapp.presentation.viewmodel.TranslatorViewModel
 import com.example.texttranslatorapp.presentation.viewmodel.CropImageView
 import kotlinx.coroutines.launch
+import com.example.texttranslatorapp.data.datasource.MLKitTextExtractorMultilingual
+import com.example.texttranslatorapp.presentation.utils.ImageOptimizationUtils
 
 class ImageViewerActivity : AppCompatActivity() {
 
@@ -69,7 +71,8 @@ class ImageViewerActivity : AppCompatActivity() {
     }
 
     private fun initializeViewModel() {
-        val textExtractor = MLKitTextExtractor()
+
+        val textExtractor = MLKitTextExtractorMultilingual()
         val languageDetector = MLKitLanguageDetector()
         val translationService = TranslationApiService()
 
@@ -89,7 +92,18 @@ class ImageViewerActivity : AppCompatActivity() {
         imagemBitmap = SharedImageViewModel.imagemCompartilhada
 
         imagemBitmap?.let {
-            cropView = CropImageView(this, it)
+            // Otimizar imagem ANTES de usar
+            val imagemOtimizada = ImageOptimizationUtils.otimizarImagemParaOCR(it)
+
+            // Validar qualidade
+            val validacao = ImageOptimizationUtils.validarQualidadeImagem(imagemOtimizada)
+            if (!validacao.isValid) {
+                Toast.makeText(this, validacao.message, Toast.LENGTH_LONG).show()
+                loadingText.text = validacao.message
+                return@let
+            }
+
+            cropView = CropImageView(this, imagemOtimizada)
             imgContainer.removeAllViews()
             imgContainer.addView(
                 cropView,
@@ -98,7 +112,13 @@ class ImageViewerActivity : AppCompatActivity() {
                     FrameLayout.LayoutParams.MATCH_PARENT
                 )
             )
-            viewModel.processImage(it)
+
+            // Mostrar dicas
+            val dicas = ImageOptimizationUtils.obterDicasOCR()
+            loadingText.text = "💡 Dica: ${dicas.random()}"
+
+            // Processar com imagem otimizada
+            viewModel.processImage(imagemOtimizada)
         } ?: run {
             Toast.makeText(this, getString(R.string.erro_imagem_nao_recebida), Toast.LENGTH_SHORT).show()
             finish()

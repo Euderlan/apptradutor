@@ -27,6 +27,7 @@ import com.example.texttranslatorapp.presentation.utils.UIListenersManager
 import com.example.texttranslatorapp.presentation.utils.ViewModelObserverManager
 import com.example.texttranslatorapp.util.ImageProcessor
 import com.example.texttranslatorapp.util.PermissionManager
+import com.example.texttranslatorapp.data.datasource.MLKitTextExtractorMultilingual
 
 class MainActivity : AppCompatActivity() {
 
@@ -86,7 +87,7 @@ class MainActivity : AppCompatActivity() {
     // Criação manual das dependências seguindo o fluxo:
     // datasource -> repository -> use case -> viewmodel
     private fun initializeViewModels() {
-        val textExtractor = MLKitTextExtractor()
+        val textExtractor = MLKitTextExtractorMultilingual()
         val languageDetector = MLKitLanguageDetector()
         val translationService = TranslationApiService()
 
