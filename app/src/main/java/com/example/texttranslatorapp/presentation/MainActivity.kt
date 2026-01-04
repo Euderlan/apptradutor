@@ -9,8 +9,8 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.texttranslatorapp.R
 import com.example.texttranslatorapp.data.datasource.MLKitLanguageDetector
-import com.example.texttranslatorapp.data.datasource.MLKitTextExtractor
 import com.example.texttranslatorapp.data.datasource.TranslationApiService
+import com.example.texttranslatorapp.data.datasource.MLKitTextExtractorMultilingual
 import com.example.texttranslatorapp.data.repository.LanguageDetectionRepository
 import com.example.texttranslatorapp.data.repository.TextExtractionRepository
 import com.example.texttranslatorapp.data.repository.TranslationRepository
@@ -27,12 +27,9 @@ import com.example.texttranslatorapp.presentation.utils.UIListenersManager
 import com.example.texttranslatorapp.presentation.utils.ViewModelObserverManager
 import com.example.texttranslatorapp.util.ImageProcessor
 import com.example.texttranslatorapp.util.PermissionManager
-import com.example.texttranslatorapp.data.datasource.MLKitTextExtractorMultilingual
 
 class MainActivity : AppCompatActivity() {
 
-    // Declaração dos elementos de interface.
-    // O uso de lateinit evita nullability, mas exige inicialização antes do uso.
     private lateinit var btnCapturar: Button
     private lateinit var btnGaleria: Button
     private lateinit var btntraduzir: Button
@@ -45,7 +42,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var containerTargetLanguage: FrameLayout
     private lateinit var textDetectedLanguage: TextView
 
-    // Managers responsáveis por separar responsabilidades e reduzir lógica na Activity.
     private lateinit var viewModel: TranslatorViewModel
     private lateinit var permissionManager: PermissionManager
     private lateinit var permissionsHandler: PermissionsHandlerManager
@@ -57,11 +53,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Infla o layout da Activity.
         setContentView(R.layout.activity_main)
 
-        // Pipeline de inicialização.
         initializeViews()
         initializeViewModels()
         initializeManagers()
@@ -69,7 +62,6 @@ class MainActivity : AppCompatActivity() {
         observeViewModel()
     }
 
-    // Inicializa e associa os componentes do layout às variáveis Kotlin.
     private fun initializeViews() {
         btnCapturar = findViewById(R.id.btnCapturar)
         btnGaleria = findViewById(R.id.btnGaleria)
@@ -84,8 +76,6 @@ class MainActivity : AppCompatActivity() {
         containerTargetLanguage = findViewById(R.id.containerTargetLanguage)
     }
 
-    // Criação manual das dependências seguindo o fluxo:
-    // datasource -> repository -> use case -> viewmodel
     private fun initializeViewModels() {
         val textExtractor = MLKitTextExtractorMultilingual()
         val languageDetector = MLKitLanguageDetector()
@@ -105,12 +95,10 @@ class MainActivity : AppCompatActivity() {
             translateTextUC
         )
 
-        // Estados iniciais exibidos na interface.
         textSourceLanguage.text = "Inglês"
         textTargetLanguage.text = "Português"
     }
 
-    // Inicialização dos managers utilitários.
     private fun initializeManagers() {
         permissionManager = PermissionManager(this)
         permissionsHandler = PermissionsHandlerManager(this, permissionManager)
@@ -126,9 +114,12 @@ class MainActivity : AppCompatActivity() {
         textWatcherManager = TextWatcherDebounceManager(viewModel)
         uiListenersManager = UIListenersManager(this, viewModel, languageDialogManager)
         observerManager = ViewModelObserverManager(this, viewModel, textWatcherManager)
+
+        imageCaptureManager.setOnImageViewerResult { textoSelecionado, idiomaDetectado ->
+            viewModel.setExtractedText(textoSelecionado, idiomaDetectado)
+        }
     }
 
-    // Configuração dos listeners da interface.
     private fun setupUI() {
         uiListenersManager.setupCaptureButtons(
             btnCapturar,
@@ -153,11 +144,9 @@ class MainActivity : AppCompatActivity() {
         uiListenersManager.setupSwapButton(btnSwapLanguages)
         uiListenersManager.setupTranslateButton(btntraduzir, textoExtraido)
 
-        // Observa mudanças no campo de texto com debounce.
         textWatcherManager.setupTextWatcher(textoExtraido)
     }
 
-    // Observadores que conectam estados do ViewModel à UI.
     private fun observeViewModel() {
         observerManager.observeExtractedText(textoExtraido, textSourceLanguage)
         observerManager.observeDetectedLanguage(textDetectedLanguage)
@@ -177,7 +166,6 @@ class MainActivity : AppCompatActivity() {
         observerManager.observeErrors()
     }
 
-    // Resultado do pedido de permissões ao sistema Android.
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
@@ -193,22 +181,6 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    // Retorno das intents de câmera ou galeria.
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        imageCaptureManager.handleActivityResult(
-            requestCode,
-            resultCode,
-            data,
-            onImageViewerResult = { textoSelecionado, idiomaDetectado ->
-                viewModel.setExtractedText(textoSelecionado, idiomaDetectado)
-            }
-        )
-    }
-
-    // Liberação de recursos para evitar vazamentos de memória.
     override fun onDestroy() {
         super.onDestroy()
         textWatcherManager.cleanup()

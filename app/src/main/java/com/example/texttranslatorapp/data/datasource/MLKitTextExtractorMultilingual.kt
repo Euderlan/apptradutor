@@ -182,18 +182,4 @@ class MLKitTextExtractorMultilingual {
             else -> extractTextLatin(bitmap)
         }
     }
-
-    /**
-     * Retorna lista de idiomas suportados
-     */
-    fun getSupportedLanguages(): List<String> {
-        return listOf(
-            "Português (pt)", "Inglês (en)", "Espanhol (es)", "Francês (fr)",
-            "Alemão (de)", "Italiano (it)", "Russo (ru)",  // Latin
-            "Japonês (ja)",  // CJK
-            "Chinês (zh)",   // CJK
-            "Coreano (ko)",  // CJK
-            "Hindi (hi)", "Sânscrito (sa)", "Marathi (mr)"  // Devanagari
-        )
-    }
 }

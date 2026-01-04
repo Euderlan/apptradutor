@@ -7,24 +7,40 @@
     <string name="texto_extraido">Texto extraido aqui</string>
     <string name="texto_traduzido">Texto traduzido aqui</string>
 
-    <!-- ImageViewerActivity - UI -->
+    <string name="extrair_editar_texto">Extrair e Editar Texto</string>
+    <string name="extraindo_texto">Extraindo texto...</string>
+    <string name="ativar_selecao">Ativar Seleção de Área</string>
     <string name="cancelar_selecao">Cancelar Seleção</string>
-    <string name="ativar_selecao">✂️ Ativar Seleção de Área</string>
+    <string name="idioma_detectado_hifen">Idioma detectado: -</string>
+    <string name="texto_extraido_label">Texto Extraído (edite conforme necessário):</string>
+    <string name="selecione_edite_texto">Selecione ou edite o texto aqui</string>
+    <string name="tudo">Tudo</string>
+    <string name="selecao">Seleção</string>
+    <string name="cancelar">Cancelar</string>
+    <string name="continuar">Continuar</string>
+
     <string name="modo_crop_ativo">Modo crop ativo - arraste para selecionar</string>
     <string name="arraste_para_selecionar">Arraste para selecionar a área</string>
     <string name="pronto">Pronto</string>
 
-    <!-- ImageViewerActivity - Messages -->
     <string name="selecione_area_primeiro">Por favor, selecione uma área primeiro</string>
     <string name="selecione_texto">Por favor, selecione algum texto</string>
     <string name="idioma_padrao">Inglês</string>
     <string name="extraindo_selecao">Extraindo texto da seleção...</string>
     <string name="texto_extraido_sucesso">Texto extraído com sucesso</string>
 
-    <!-- ImageViewerActivity - Error Messages (com placeholders) -->
     <string name="erro_imagem_nao_recebida">Erro: Imagem não recebida</string>
     <string name="erro_com_mensagem">Erro: %1$s</string>
     <string name="idioma_detectado_com_valor">Idioma detectado: %1$s</string>
     <string name="erro_extrair">Erro ao extrair</string>
     <string name="erro_desconhecido">Erro desconhecido</string>
+
+    <string name="texto_dica_ocr">Dica: %1$s</string>
+    <string name="area_muito_pequena">Área muito pequena! Tamanho: %1$dx%2$dpx, Mínimo: %3$dx%3$dpx</string>
+    <string name="nenhum_texto_detectado_area">Nenhum texto detectado na área selecionada.\nTente selecionar uma área maior com texto mais nítido.</string>
+    <string name="nenhum_texto_encontrado">Nenhum texto encontrado</string>
+    <string name="texto_extraido_caracteres">Extraído com sucesso: %1$d caracteres</string>
+    <string name="erro_ao_extrair">Erro ao extrair: %1$s</string>
+    <string name="erro_na_extracao">Erro: %1$s</string>
+    <string name="selecao_invalida">Seleção inválida. Selecione uma área maior.</string>
 </resources>

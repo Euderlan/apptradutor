@@ -56,6 +56,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.1")
 
+    implementation("androidx.window:window:1.2.0")
+
     // ============================================
     // ML KIT - RECONHECIMENTO DE TEXTO
     // ============================================
@@ -64,19 +66,15 @@ dependencies {
     implementation("com.google.mlkit:text-recognition:16.0.0")
 
     // OCR Japonês (Hiragana, Katakana, Kanji)
-    // ⚠️ Requer ~2MB no APK
     implementation("com.google.mlkit:text-recognition-japanese:16.0.0")
 
     // OCR Chinês (Simplificado e Tradicional)
-    // ⚠️ Requer ~2MB no APK
     implementation("com.google.mlkit:text-recognition-chinese:16.0.0")
 
     // OCR Coreano (Hangul)
-    // ⚠️ Requer ~1.5MB no APK
     implementation("com.google.mlkit:text-recognition-korean:16.0.0")
 
     // OCR Devanagari (Hindi, Sânscrito, Marathi, Nepali)
-    // ⚠️ Requer ~1.5MB no APK
     implementation("com.google.mlkit:text-recognition-devanagari:16.0.0")
 
     // Detecção de Idioma

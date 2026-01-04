@@ -4,6 +4,8 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.provider.MediaStore
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.example.texttranslatorapp.presentation.ImageViewerActivity
 import com.example.texttranslatorapp.presentation.viewmodel.SharedImageViewModel
@@ -14,16 +16,56 @@ class ImageCaptureManager(
     private val imageProcessor: ImageProcessor
 ) {
 
-    companion object {
-        const val REQUEST_CAMERA = 1
-        const val REQUEST_GALERIA = 2
-        const val REQUEST_IMAGE_VIEWER = 3
+    private lateinit var cameraLauncher: ActivityResultLauncher<Intent>
+    private lateinit var galleryLauncher: ActivityResultLauncher<String>
+    private lateinit var imageViewerLauncher: ActivityResultLauncher<Intent>
+    private var onImageViewerResult: ((textoSelecionado: String, idiomaDetectado: String) -> Unit)? = null
+
+    init {
+        setupLaunchers()
+    }
+
+    private fun setupLaunchers() {
+        cameraLauncher = activity.registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == AppCompatActivity.RESULT_OK) {
+                val bitmap = result.data?.extras?.get("data") as? Bitmap
+                bitmap?.let { processarImagem(it) }
+            }
+        }
+
+        galleryLauncher = activity.registerForActivityResult(
+            ActivityResultContracts.GetContent()
+        ) { uri ->
+            if (uri != null) {
+                try {
+                    val bitmap = MediaStore.Images.Media.getBitmap(activity.contentResolver, uri)
+                    processarImagem(bitmap)
+                } catch (e: Exception) {
+                    Toast.makeText(activity, "Erro ao carregar imagem: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        imageViewerLauncher = activity.registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == AppCompatActivity.RESULT_OK && result.data != null) {
+                val textoSelecionado = result.data?.getStringExtra("texto_selecionado") ?: ""
+                val idiomaDetectado = result.data?.getStringExtra("idioma_detectado") ?: ""
+                onImageViewerResult?.invoke(textoSelecionado, idiomaDetectado)
+                SharedImageViewModel.imagemCompartilhada = null
+            } else {
+                SharedImageViewModel.imagemCompartilhada = null
+            }
+        }
     }
 
     fun abrirCamera() {
         try {
             val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            activity.startActivityForResult(intent, REQUEST_CAMERA)
+            cameraLauncher.launch(intent)
         } catch (e: Exception) {
             Toast.makeText(activity, "Erro: ${e.message}", Toast.LENGTH_SHORT).show()
         }
@@ -31,59 +73,21 @@ class ImageCaptureManager(
 
     fun abrirGaleria() {
         try {
-            val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-            activity.startActivityForResult(intent, REQUEST_GALERIA)
+            galleryLauncher.launch("image/*")
         } catch (e: Exception) {
             Toast.makeText(activity, "Erro: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun processarImagem(bitmap: Bitmap) {
-        // Comprime a imagem
         val compressedBitmap = imageProcessor.compressBitmap(bitmap)
-
-        // Armazena no local compartilhado
         SharedImageViewModel.imagemCompartilhada = compressedBitmap
 
-        // Abre ImageViewerActivity diretamente (sem Activity de crop intermediária)
         val intent = Intent(activity, ImageViewerActivity::class.java)
-        activity.startActivityForResult(intent, REQUEST_IMAGE_VIEWER)
+        imageViewerLauncher.launch(intent)
     }
 
-    fun handleActivityResult(
-        requestCode: Int,
-        resultCode: Int,
-        data: Intent?,
-        onImageViewerResult: (textoSelecionado: String, idiomaDetectado: String) -> Unit
-    ) {
-        when (requestCode) {
-            REQUEST_IMAGE_VIEWER -> {
-                if (resultCode == AppCompatActivity.RESULT_OK && data != null) {
-                    val textoSelecionado = data.getStringExtra("texto_selecionado") ?: ""
-                    val idiomaDetectado = data.getStringExtra("idioma_detectado") ?: ""
-                    onImageViewerResult(textoSelecionado, idiomaDetectado)
-                    SharedImageViewModel.imagemCompartilhada = null
-                } else {
-                    SharedImageViewModel.imagemCompartilhada = null
-                }
-            }
-
-            REQUEST_CAMERA -> {
-                if (resultCode == AppCompatActivity.RESULT_OK && data != null) {
-                    val bitmap = data.extras?.get("data") as? Bitmap
-                    bitmap?.let { processarImagem(it) }
-                }
-            }
-
-            REQUEST_GALERIA -> {
-                if (resultCode == AppCompatActivity.RESULT_OK && data != null) {
-                    val uri = data.data
-                    if (uri != null) {
-                        val bitmap = MediaStore.Images.Media.getBitmap(activity.contentResolver, uri)
-                        processarImagem(bitmap)
-                    }
-                }
-            }
-        }
+    fun setOnImageViewerResult(callback: (textoSelecionado: String, idiomaDetectado: String) -> Unit) {
+        onImageViewerResult = callback
     }
 }
