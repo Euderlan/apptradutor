@@ -10,12 +10,13 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:padding="16dp"
-        android:hint="Digite ou extraia o texto"
+        android:hint="@string/digite_ou_extraia"
         android:textColor="#FFFFFF"
         android:textColorHint="#999999"
         android:textSize="16sp"
         android:background="@null"
         android:inputType="textMultiLine"
-        android:gravity="top|start" />
+        android:gravity="top|start"
+        android:autofillHints="no" />
 
 </FrameLayout>

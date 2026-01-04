@@ -43,4 +43,11 @@
     <string name="erro_ao_extrair">Erro ao extrair: %1$s</string>
     <string name="erro_na_extracao">Erro: %1$s</string>
     <string name="selecao_invalida">Seleção inválida. Selecione uma área maior.</string>
+
+    <!-- Strings para activity_main.xml -->
+    <string name="app_title">TradutorDD</string>
+    <string name="idioma_detectado_label">Idioma detectado: -</string>
+    <string name="traduzir">Traduzir</string>
+    <string name="traducao_aparecera">Tradução aparecerá aqui</string>
+    <string name="digite_ou_extraia">Digite ou extraia o texto</string>
 </resources>

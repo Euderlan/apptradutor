@@ -121,19 +121,15 @@ class ImageViewerActivity : AppCompatActivity() {
         cropView = CropImageView(this, bitmap)
         imgContainer.removeAllViews()
 
-        val dimensoes = imageDimensionCalculator.calculateOptimalDimensions(bitmap)
-
         val layoutParams = FrameLayout.LayoutParams(
-            dimensoes.displayWidth,
-            dimensoes.displayHeight
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT
         )
-        layoutParams.gravity = android.view.Gravity.CENTER_HORIZONTAL
 
         imgContainer.addView(cropView, layoutParams)
 
-        Log.d("ImageViewerActivity", "Imagem adicionada ao container")
+        Log.d("ImageViewerActivity", "Imagem adicionada ao container em tamanho completo")
         Log.d("ImageViewerActivity", "Tamanho original: ${bitmap.width}x${bitmap.height}")
-        Log.d("ImageViewerActivity", "Tamanho display: ${dimensoes.displayWidth}x${dimensoes.displayHeight}")
     }
 
     private fun setupListeners() {
