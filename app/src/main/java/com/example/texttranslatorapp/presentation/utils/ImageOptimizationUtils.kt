@@ -36,7 +36,8 @@ object ImageOptimizationUtils {
         val width = bitmap.width
         val height = bitmap.height
 
-        if (width < 300 || height < 300) {
+        // Aceita imagens a partir de 100x100 pixels (reduzido de 300x300)
+        if (width < 100 || height < 100) {
             return ValidationResult(
                 isValid = false,
                 message = "Imagem muito pequena (${width}x${height}). Tire mais de perto!",

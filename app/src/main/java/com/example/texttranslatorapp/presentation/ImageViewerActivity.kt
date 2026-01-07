@@ -42,9 +42,7 @@ class ImageViewerActivity : AppCompatActivity() {
     private lateinit var loadingText: TextView
     private lateinit var btnToggleCrop: Button
 
-    private lateinit var viewModel: TranslatorViewModel
     private lateinit var textExtractionHelper: TextExtractionHelper
-    private lateinit var imageDimensionCalculator: ImageDimensionCalculator
 
     private var imagemBitmap: Bitmap? = null
     private var cropView: CropImageView? = null
@@ -54,13 +52,10 @@ class ImageViewerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_image_viewer)
 
-        imageDimensionCalculator = ImageDimensionCalculator(this)
-
         initializeViews()
-        initializeViewModel()
+        initializeHelper()
         setupImage()
         setupListeners()
-        observeViewModel()
     }
 
     private fun initializeViews() {
@@ -75,20 +70,8 @@ class ImageViewerActivity : AppCompatActivity() {
         btnToggleCrop = findViewById(R.id.btnToggleCrop)
     }
 
-    private fun initializeViewModel() {
+    private fun initializeHelper() {
         val textExtractor = MLKitTextExtractorMultilingual()
-        val languageDetector = MLKitLanguageDetector()
-        val translationService = TranslationApiService()
-
-        val textExtractionRepo = TextExtractionRepository(textExtractor)
-        val languageDetectionRepo = LanguageDetectionRepository(languageDetector)
-        val translationRepo = TranslationRepository(translationService)
-
-        val extractTextUC = ExtractTextUseCase(textExtractionRepo)
-        val detectLanguageUC = DetectLanguageUseCase(languageDetectionRepo)
-        val translateTextUC = TranslateTextUseCase(translationRepo)
-
-        viewModel = TranslatorViewModel(extractTextUC, detectLanguageUC, translateTextUC)
         textExtractionHelper = TextExtractionHelper(textExtractor)
     }
 
@@ -110,7 +93,6 @@ class ImageViewerActivity : AppCompatActivity() {
             val dicas = ImageOptimizationUtils.obterDicasOCR()
             loadingText.text = getString(R.string.texto_dica_ocr, dicas.random())
 
-            viewModel.processImage(imagemOtimizada)
         } ?: run {
             Toast.makeText(this, getString(R.string.erro_imagem_nao_recebida), Toast.LENGTH_SHORT).show()
             finish()
@@ -153,11 +135,7 @@ class ImageViewerActivity : AppCompatActivity() {
         }
 
         btnExtrairTudo.setOnClickListener {
-            lifecycleScope.launch {
-                viewModel.extractedText.collect { text ->
-                    editTextSelecionado.setText(text)
-                }
-            }
+            extrairTextoDaImagemCompleta()
         }
 
         btnExtrairSelecao.setOnClickListener {
@@ -177,7 +155,7 @@ class ImageViewerActivity : AppCompatActivity() {
 
             val intent = Intent().apply {
                 putExtra("texto_selecionado", textoSelecionado)
-                putExtra("idioma_detectado", viewModel.detectedLanguage.value?.detectedLanguage ?: getString(R.string.idioma_padrao))
+                putExtra("idioma_detectado", "")
             }
             setResult(RESULT_OK, intent)
             finish()
@@ -189,6 +167,51 @@ class ImageViewerActivity : AppCompatActivity() {
         }
     }
 
+    private fun extrairTextoDaImagemCompleta() {
+        imagemBitmap?.let { imagem ->
+            lifecycleScope.launch {
+                loadingText.text = getString(R.string.extraindo_selecao)
+                btnExtrairTudo.isEnabled = false
+
+                try {
+                    Log.d("ImageViewerActivity", "Extraindo texto da imagem completa")
+                    val textoExtraido = textExtractionHelper.extrairTextoDaSelecao(imagem, android.graphics.Rect(0, 0, imagem.width, imagem.height))
+
+                    if (textoExtraido.isEmpty()) {
+                        Log.w("ImageViewerActivity", "Nenhum texto detectado")
+                        Toast.makeText(
+                            this@ImageViewerActivity,
+                            getString(R.string.nenhum_texto_detectado_area),
+                            Toast.LENGTH_LONG
+                        ).show()
+                        loadingText.text = getString(R.string.nenhum_texto_encontrado)
+                    } else {
+                        Log.d("ImageViewerActivity", "Texto extraído: ${textoExtraido.length} caracteres")
+                        editTextSelecionado.setText(textoExtraido)
+                        loadingText.text = getString(R.string.texto_extraido_caracteres, textoExtraido.length)
+
+                        Toast.makeText(
+                            this@ImageViewerActivity,
+                            getString(R.string.texto_extraido_caracteres, textoExtraido.length),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                } catch (e: Exception) {
+                    Log.e("ImageViewerActivity", "ERRO na extração", e)
+                    val mensagemErro = e.message ?: getString(R.string.erro_desconhecido)
+                    Toast.makeText(
+                        this@ImageViewerActivity,
+                        getString(R.string.erro_ao_extrair, mensagemErro),
+                        Toast.LENGTH_LONG
+                    ).show()
+                    loadingText.text = getString(R.string.erro_na_extracao, mensagemErro)
+                } finally {
+                    btnExtrairTudo.isEnabled = true
+                }
+            }
+        }
+    }
+
     private fun extrairTextoDaSelecao() {
         imagemBitmap?.let { imagem ->
             cropView?.getSelectionRect()?.let { rect ->
@@ -196,11 +219,8 @@ class ImageViewerActivity : AppCompatActivity() {
                 Log.d("ImageViewerActivity", "Bitmap: ${imagem.width}x${imagem.height}")
                 Log.d("ImageViewerActivity", "Rect: $rect")
 
-                val minSize = 100
-                if (rect.width() < minSize || rect.height() < minSize) {
-                    val msg = getString(R.string.area_muito_pequena, rect.width(), rect.height(), minSize)
-                    Log.w("ImageViewerActivity", msg)
-                    Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+                if (rect.width() <= 0 || rect.height() <= 0) {
+                    Toast.makeText(this, "Seleção inválida", Toast.LENGTH_LONG).show()
                     return@let
                 }
 
@@ -250,48 +270,9 @@ class ImageViewerActivity : AppCompatActivity() {
                 Log.w("ImageViewerActivity", "getSelectionRect() retornou null")
                 Toast.makeText(
                     this,
-                    getString(R.string.selecao_invalida),
+                    getString(R.string.selecione_area_primeiro),
                     Toast.LENGTH_SHORT
                 ).show()
-            }
-        }
-    }
-
-    private fun observeViewModel() {
-        lifecycleScope.launch {
-            viewModel.extractedText.collect { text ->
-                if (text.isNotEmpty() && editTextSelecionado.text.isEmpty()) {
-                    editTextSelecionado.setText(text)
-                }
-            }
-        }
-
-        lifecycleScope.launch {
-            viewModel.detectedLanguage.collect { detection ->
-                detection?.let {
-                    loadingText.text = getString(R.string.idioma_detectado_com_valor, it.detectedLanguage)
-                }
-            }
-        }
-
-        lifecycleScope.launch {
-            viewModel.isLoading.collect { isLoading ->
-                if (!isLoading) {
-                    loadingText.text = getString(R.string.pronto)
-                }
-                btnContinuar.isEnabled = !isLoading
-                btnExtrairTudo.isEnabled = !isLoading && !modoCropAtivo
-                btnToggleCrop.isEnabled = !isLoading
-            }
-        }
-
-        lifecycleScope.launch {
-            viewModel.error.collect { error ->
-                error?.let {
-                    Log.e("ImageViewerActivity", "Erro do ViewModel: $it")
-                    Toast.makeText(this@ImageViewerActivity, getString(R.string.erro_com_mensagem, it), Toast.LENGTH_LONG).show()
-                    loadingText.text = getString(R.string.erro_extrair)
-                }
             }
         }
     }

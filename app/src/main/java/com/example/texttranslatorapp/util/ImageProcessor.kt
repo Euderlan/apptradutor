@@ -4,9 +4,14 @@ import android.graphics.Bitmap
 
 class ImageProcessor {
 
-    fun compressBitmap(bitmap: Bitmap, maxWidth: Int = 1200, maxHeight: Int = 1200): Bitmap {
+    fun compressBitmap(bitmap: Bitmap, maxWidth: Int = 4096, maxHeight: Int = 4096): Bitmap {
         val width = bitmap.width
         val height = bitmap.height
+
+        // Se a imagem já está dentro do limite, retorna sem modificar
+        if (width <= maxWidth && height <= maxHeight) {
+            return bitmap
+        }
 
         val bitmapRatio = width.toFloat() / height
         val maxRatio = maxWidth.toFloat() / maxHeight
