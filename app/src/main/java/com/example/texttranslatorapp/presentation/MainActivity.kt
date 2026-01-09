@@ -80,14 +80,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initializeViewModels() {
-        // Monta manualmente as dependências (datasources -> repositories -> use cases -> viewmodel)
         val textExtractor = MLKitTextExtractorMultilingual()
         val languageDetector = MLKitLanguageDetector()
-        val translationService = TranslationApiService()
+
+        val onlineTranslationService = TranslationApiService()
+        val offlineTranslationService = com.example.texttranslatorapp.data.datasource.OfflineTranslationService()
+        val connectivityChecker = com.example.texttranslatorapp.util.ConnectivityChecker(this)
 
         val textExtractionRepo = TextExtractionRepository(textExtractor)
         val languageDetectionRepo = LanguageDetectionRepository(languageDetector)
-        val translationRepo = TranslationRepository(translationService)
+        val translationRepo = TranslationRepository(
+            onlineService = onlineTranslationService,
+            offlineService = offlineTranslationService,
+            connectivityChecker = connectivityChecker
+        )
 
         val extractTextUC = ExtractTextUseCase(textExtractionRepo)
         val detectLanguageUC = DetectLanguageUseCase(languageDetectionRepo)
@@ -99,10 +105,10 @@ class MainActivity : AppCompatActivity() {
             translateTextUC
         )
 
-        // Define idiomas padrão exibidos na UI
         textSourceLanguage.text = "Inglês"
         textTargetLanguage.text = "Português"
     }
+
 
     private fun initializeManagers() {
         // Centraliza responsabilidades específicas em managers (permissões, captura, diálogos, listeners e observers)

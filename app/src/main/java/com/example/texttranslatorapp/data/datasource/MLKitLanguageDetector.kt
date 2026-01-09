@@ -1,56 +1,65 @@
 package com.example.texttranslatorapp.data.datasource
 
-// Importa o modelo de resultado da detecção de idioma do domínio
 import com.example.texttranslatorapp.domain.models.DetectionResult
-
-// Importa a API de identificação de idioma do ML Kit
 import com.google.mlkit.nl.languageid.LanguageIdentification
-
-// Importa extensão para aguardar Tasks do Google usando corrotinas
 import kotlinx.coroutines.tasks.await
+import java.util.Locale
 
-// Classe responsável por detectar o idioma de um texto usando o ML Kit
 class MLKitLanguageDetector {
 
-    // Inicializa o identificador de idioma de forma preguiçosa (lazy)
-    // Ele só será criado quando for utilizado pela primeira vez
     private val languageIdentifier by lazy {
+        // dá pra ajustar o threshold se quiser (ex: 0.4f)
         LanguageIdentification.getClient()
     }
 
-    // Função suspensa que detecta o idioma de um texto
-    // Retorna um objeto DetectionResult com os dados da detecção
     suspend fun detect(text: String): DetectionResult {
         return try {
-            // Executa a detecção do idioma e aguarda o resultado de forma assíncrona
-            val languageCode = languageIdentifier.identifyLanguage(text).await()
+            val cleanText = text.trim()
 
-            // Mapa que associa códigos de idioma aos seus nomes em português
-            val languageNames = mapOf(
-                "pt" to "Português",
-                "en" to "Inglês",
-                "es" to "Espanhol",
-                "fr" to "Francês",
-                "de" to "Alemão",
-                "it" to "Italiano",
-                "ja" to "Japonês",
-                "zh" to "Chinês",
-                "ru" to "Russo"
-            )
+            // 1) Pega lista com confidências (mais robusto que identifyLanguage)
+            val possibilities = languageIdentifier.identifyPossibleLanguages(cleanText).await()
 
-            // Obtém o nome do idioma a partir do código retornado
-            // Caso não exista no mapa, assume como "Desconhecido"
-            val displayName = languageNames[languageCode] ?: "Desconhecido"
+            // Escolhe o melhor resultado com maior confiança
+            val best = possibilities.maxByOrNull { it.confidence }
+            val rawCode = best?.languageTag ?: "und"
+            val confidence = best?.confidence ?: 0.0f
 
-            // Cria e retorna o objeto de resultado da detecção
+            // Normaliza "es-419" -> "es", "pt-BR" -> "pt"
+            val normalizedCode = normalizeLanguageCode(rawCode)
+
+            val displayName = codeToPortugueseName(normalizedCode)
+
             DetectionResult(
                 detectedLanguage = displayName,
-                confidence = 0.95f, // Valor fixo, pois o ML Kit não fornece confiança diretamente
-                languageCode = languageCode
+                confidence = confidence,
+                languageCode = normalizedCode
             )
         } catch (e: Exception) {
-            // Lança uma nova exceção com uma mensagem mais descritiva
             throw Exception("Erro ao detectar idioma: ${e.message}")
+        }
+    }
+
+    private fun normalizeLanguageCode(code: String): String {
+        if (code.isBlank() || code == "und") return "und"
+        // pega só o idioma base antes do hífen (pt-BR -> pt)
+        return code.lowercase(Locale.ROOT).split("-").firstOrNull().orEmpty().ifBlank { "und" }
+    }
+
+    private fun codeToPortugueseName(languageCode: String): String {
+        val languageNames = mapOf(
+            "pt" to "Português",
+            "en" to "Inglês",
+            "es" to "Espanhol",
+            "fr" to "Francês",
+            "de" to "Alemão",
+            "it" to "Italiano",
+            "ja" to "Japonês",
+            "zh" to "Chinês",
+            "ru" to "Russo",
+        )
+        return when (languageCode) {
+            "und" -> "Desconhecido"
+            else -> languageNames[languageCode] ?: "Desconhecido"
         }
     }
 }

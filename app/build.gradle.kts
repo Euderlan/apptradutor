@@ -80,11 +80,14 @@ dependencies {
     // Detecção de Idioma
     implementation("com.google.mlkit:language-id:17.0.0")
 
-    // Tradução
-    implementation("com.google.mlkit:translate:16.0.0")
+// Tradução (ML Kit on-device)
+    implementation("com.google.mlkit:translate:17.0.0")
 
-    // Comum (necessário para todos)
-    implementation("com.google.mlkit:common:18.8.0")
+// Força uma versão de common que contém LibraryVersion (evita crash NoClassDefFoundError)
+    constraints {
+        implementation("com.google.mlkit:common:18.9.0")
+    }
+
 
     // ============================================
     // NETWORKING & JSON
