@@ -30,6 +30,7 @@ import com.example.texttranslatorapp.presentation.viewmodel.CropImageView
 import kotlinx.coroutines.launch
 import com.example.texttranslatorapp.presentation.utils.ImageOptimizationUtils
 
+// Activity responsável por exibir a imagem recebida e permitir extrair texto (OCR) da imagem inteira ou de uma seleção
 class ImageViewerActivity : AppCompatActivity() {
 
     private lateinit var imgContainer: FrameLayout
@@ -52,6 +53,7 @@ class ImageViewerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_image_viewer)
 
+        // Inicializa UI, dependências e listeners
         initializeViews()
         initializeHelper()
         setupImage()
@@ -59,6 +61,7 @@ class ImageViewerActivity : AppCompatActivity() {
     }
 
     private fun initializeViews() {
+        // Faz o bind dos componentes do layout
         imgContainer = findViewById(R.id.imgContainer)
         editTextSelecionado = findViewById(R.id.editTextSelecionado)
         textDetectado = findViewById(R.id.textDetectado)
@@ -71,16 +74,20 @@ class ImageViewerActivity : AppCompatActivity() {
     }
 
     private fun initializeHelper() {
+        // Configura o helper de extração de texto com o extractor multilíngue
         val textExtractor = MLKitTextExtractorMultilingual()
         textExtractionHelper = TextExtractionHelper(textExtractor)
     }
 
     private fun setupImage() {
+        // Recupera o Bitmap compartilhado por outra tela (via ViewModel estático/compartilhado)
         imagemBitmap = SharedImageViewModel.imagemCompartilhada
 
         imagemBitmap?.let {
+            // Otimiza a imagem (ex.: redimensionamento) para melhorar desempenho do OCR
             val imagemOtimizada = ImageOptimizationUtils.otimizarImagemParaOCR(it)
 
+            // Valida se a imagem tem tamanho aceitável antes do processamento
             val validacao = ImageOptimizationUtils.validarQualidadeImagem(imagemOtimizada)
             if (!validacao.isValid) {
                 Toast.makeText(this, validacao.message, Toast.LENGTH_LONG).show()
@@ -88,18 +95,22 @@ class ImageViewerActivity : AppCompatActivity() {
                 return@let
             }
 
+            // Exibe a imagem no container usando uma View que permite seleção (crop)
             adicionarImagemAoContainer(imagemOtimizada)
 
+            // Exibe uma dica aleatória para melhorar resultados do OCR
             val dicas = ImageOptimizationUtils.obterDicasOCR()
             loadingText.text = getString(R.string.texto_dica_ocr, dicas.random())
 
         } ?: run {
+            // Finaliza a tela se não houver imagem recebida
             Toast.makeText(this, getString(R.string.erro_imagem_nao_recebida), Toast.LENGTH_SHORT).show()
             finish()
         }
     }
 
     private fun adicionarImagemAoContainer(bitmap: Bitmap) {
+        // Cria a CropImageView com o bitmap e adiciona ao container
         cropView = CropImageView(this, bitmap)
         imgContainer.removeAllViews()
 
@@ -116,6 +127,7 @@ class ImageViewerActivity : AppCompatActivity() {
 
     private fun setupListeners() {
         btnToggleCrop.setOnClickListener {
+            // Alterna entre modo seleção (crop) ativo/inativo e ajusta a UI conforme o estado
             if (!modoCropAtivo) {
                 modoCropAtivo = true
                 cropView?.setSelecaoAtiva(true)
@@ -134,10 +146,12 @@ class ImageViewerActivity : AppCompatActivity() {
             }
         }
 
+        // Extrai texto da imagem completa (sem seleção)
         btnExtrairTudo.setOnClickListener {
             extrairTextoDaImagemCompleta()
         }
 
+        // Extrai texto apenas da área selecionada (se existir seleção válida)
         btnExtrairSelecao.setOnClickListener {
             if (cropView?.temSelecao() == true) {
                 extrairTextoDaSelecao()
@@ -147,6 +161,7 @@ class ImageViewerActivity : AppCompatActivity() {
         }
 
         btnContinuar.setOnClickListener {
+            // Retorna o texto extraído/selecionado para a Activity anterior via setResult
             val textoSelecionado = editTextSelecionado.text.toString()
             if (textoSelecionado.isEmpty()) {
                 Toast.makeText(this, getString(R.string.selecione_texto), Toast.LENGTH_SHORT).show()
@@ -162,6 +177,7 @@ class ImageViewerActivity : AppCompatActivity() {
         }
 
         btnCancelar.setOnClickListener {
+            // Cancela a operação e fecha a tela
             setResult(RESULT_CANCELED)
             finish()
         }
@@ -170,12 +186,18 @@ class ImageViewerActivity : AppCompatActivity() {
     private fun extrairTextoDaImagemCompleta() {
         imagemBitmap?.let { imagem ->
             lifecycleScope.launch {
+                // Executa OCR em coroutine para não bloquear a UI
                 loadingText.text = getString(R.string.extraindo_selecao)
                 btnExtrairTudo.isEnabled = false
 
                 try {
                     Log.d("ImageViewerActivity", "Extraindo texto da imagem completa")
-                    val textoExtraido = textExtractionHelper.extrairTextoDaSelecao(imagem, android.graphics.Rect(0, 0, imagem.width, imagem.height))
+
+                    // Reaproveita o mesmo fluxo de extração passando um rect que cobre a imagem inteira
+                    val textoExtraido = textExtractionHelper.extrairTextoDaSelecao(
+                        imagem,
+                        android.graphics.Rect(0, 0, imagem.width, imagem.height)
+                    )
 
                     if (textoExtraido.isEmpty()) {
                         Log.w("ImageViewerActivity", "Nenhum texto detectado")
@@ -197,6 +219,7 @@ class ImageViewerActivity : AppCompatActivity() {
                         ).show()
                     }
                 } catch (e: Exception) {
+                    // Trata falhas do OCR e exibe mensagem amigável para o usuário
                     Log.e("ImageViewerActivity", "ERRO na extração", e)
                     val mensagemErro = e.message ?: getString(R.string.erro_desconhecido)
                     Toast.makeText(
@@ -219,12 +242,14 @@ class ImageViewerActivity : AppCompatActivity() {
                 Log.d("ImageViewerActivity", "Bitmap: ${imagem.width}x${imagem.height}")
                 Log.d("ImageViewerActivity", "Rect: $rect")
 
+                // Evita processar seleções inválidas
                 if (rect.width() <= 0 || rect.height() <= 0) {
                     Toast.makeText(this, "Seleção inválida", Toast.LENGTH_LONG).show()
                     return@let
                 }
 
                 lifecycleScope.launch {
+                    // Executa OCR da área selecionada em coroutine
                     loadingText.text = getString(R.string.extraindo_selecao)
                     btnExtrairSelecao.isEnabled = false
 
@@ -254,6 +279,7 @@ class ImageViewerActivity : AppCompatActivity() {
                             ).show()
                         }
                     } catch (e: Exception) {
+                        // Trata falhas do OCR na seleção
                         Log.e("ImageViewerActivity", "ERRO na extração de crop", e)
                         val mensagemErro = e.message ?: getString(R.string.erro_desconhecido)
                         Toast.makeText(
@@ -267,6 +293,7 @@ class ImageViewerActivity : AppCompatActivity() {
                     }
                 }
             } ?: run {
+                // Caso não exista rect de seleção disponível
                 Log.w("ImageViewerActivity", "getSelectionRect() retornou null")
                 Toast.makeText(
                     this,

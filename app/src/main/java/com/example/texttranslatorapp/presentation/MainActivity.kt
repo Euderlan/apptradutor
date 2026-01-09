@@ -28,6 +28,7 @@ import com.example.texttranslatorapp.presentation.utils.ViewModelObserverManager
 import com.example.texttranslatorapp.util.ImageProcessor
 import com.example.texttranslatorapp.util.PermissionManager
 
+// Activity principal: coordena UI, permissões, captura/seleção de imagem e fluxo de tradução via ViewModel
 class MainActivity : AppCompatActivity() {
 
     private lateinit var btnCapturar: Button
@@ -55,6 +56,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // Inicializa UI, dependências e observadores do ViewModel
         initializeViews()
         initializeViewModels()
         initializeManagers()
@@ -63,6 +65,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initializeViews() {
+        // Faz o bind dos componentes do layout
         btnCapturar = findViewById(R.id.btnCapturar)
         btnGaleria = findViewById(R.id.btnGaleria)
         textoExtraido = findViewById(R.id.textoExtraido)
@@ -77,6 +80,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initializeViewModels() {
+        // Monta manualmente as dependências (datasources -> repositories -> use cases -> viewmodel)
         val textExtractor = MLKitTextExtractorMultilingual()
         val languageDetector = MLKitLanguageDetector()
         val translationService = TranslationApiService()
@@ -95,11 +99,13 @@ class MainActivity : AppCompatActivity() {
             translateTextUC
         )
 
+        // Define idiomas padrão exibidos na UI
         textSourceLanguage.text = "Inglês"
         textTargetLanguage.text = "Português"
     }
 
     private fun initializeManagers() {
+        // Centraliza responsabilidades específicas em managers (permissões, captura, diálogos, listeners e observers)
         permissionManager = PermissionManager(this)
         permissionsHandler = PermissionsHandlerManager(this, permissionManager)
         imageCaptureManager = ImageCaptureManager(this, ImageProcessor())
@@ -115,12 +121,14 @@ class MainActivity : AppCompatActivity() {
         uiListenersManager = UIListenersManager(this, viewModel, languageDialogManager)
         observerManager = ViewModelObserverManager(this, viewModel, textWatcherManager)
 
+        // Recebe o resultado do ImageViewerActivity e atualiza o texto extraído no ViewModel
         imageCaptureManager.setOnImageViewerResult { textoSelecionado, idiomaDetectado ->
             viewModel.setExtractedText(textoSelecionado, idiomaDetectado)
         }
     }
 
     private fun setupUI() {
+        // Configura ações de câmera/galeria com fluxo de permissões
         uiListenersManager.setupCaptureButtons(
             btnCapturar,
             btnGaleria,
@@ -136,6 +144,7 @@ class MainActivity : AppCompatActivity() {
             }
         )
 
+        // Configura cliques para seleção de idiomas
         uiListenersManager.setupLanguageContainers(
             containerSourceLanguage,
             containerTargetLanguage
@@ -144,10 +153,12 @@ class MainActivity : AppCompatActivity() {
         uiListenersManager.setupSwapButton(btnSwapLanguages)
         uiListenersManager.setupTranslateButton(btntraduzir, textoExtraido)
 
+        // Observa mudanças no campo de texto com debounce para acionar detecção/tradução sem excesso de chamadas
         textWatcherManager.setupTextWatcher(textoExtraido)
     }
 
     private fun observeViewModel() {
+        // Observa estados do ViewModel e reflete na UI (textos, idiomas, loading e erros)
         observerManager.observeExtractedText(textoExtraido, textSourceLanguage)
         observerManager.observeDetectedLanguage(textDetectedLanguage)
         observerManager.observeSourceLanguage(textSourceLanguage)
@@ -173,6 +184,7 @@ class MainActivity : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
+        // Encaminha o resultado das permissões para o handler decidir o próximo passo
         permissionsHandler.handleRequestPermissionsResult(
             requestCode,
             grantResults,
@@ -183,6 +195,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        // Remove callbacks/handlers associados ao debounce para evitar vazamentos
         textWatcherManager.cleanup()
     }
 }

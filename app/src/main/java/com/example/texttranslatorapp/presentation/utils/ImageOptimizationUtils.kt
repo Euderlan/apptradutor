@@ -3,8 +3,10 @@ package com.example.texttranslatorapp.presentation.utils
 import android.graphics.Bitmap
 import android.util.Log
 
+// Utilitário responsável por preparar e validar imagens para OCR
 object ImageOptimizationUtils {
 
+    // Redimensiona a imagem mantendo a proporção para melhorar desempenho do OCR
     fun otimizarImagemParaOCR(bitmap: Bitmap): Bitmap {
         val width = bitmap.width
         val height = bitmap.height
@@ -13,11 +15,13 @@ object ImageOptimizationUtils {
 
         val maxDimension = 2048
 
+        // Retorna a imagem original se já estiver dentro do tamanho ideal
         if (width <= maxDimension && height <= maxDimension) {
             Log.d("ImageOptimization", "Imagem já está no tamanho ideal")
             return bitmap
         }
 
+        // Calcula a proporção de redimensionamento mantendo o aspecto
         val ratio = if (width > height) {
             maxDimension.toFloat() / width
         } else {
@@ -32,11 +36,12 @@ object ImageOptimizationUtils {
         return Bitmap.createScaledBitmap(bitmap, novaLargura, novaAltura, true)
     }
 
+    // Valida se a imagem tem qualidade mínima para OCR
     fun validarQualidadeImagem(bitmap: Bitmap): ValidationResult {
         val width = bitmap.width
         val height = bitmap.height
 
-        // Aceita imagens a partir de 100x100 pixels (reduzido de 300x300)
+        // Verifica se a imagem é pequena demais
         if (width < 100 || height < 100) {
             return ValidationResult(
                 isValid = false,
@@ -45,6 +50,7 @@ object ImageOptimizationUtils {
             )
         }
 
+        // Verifica se a imagem é grande demais
         if (width > 5000 || height > 5000) {
             return ValidationResult(
                 isValid = false,
@@ -53,6 +59,7 @@ object ImageOptimizationUtils {
             )
         }
 
+        // Detecta imagens excessivamente alongadas
         val ratio = maxOf(width, height).toFloat() / minOf(width, height)
         if (ratio > 15) {
             return ValidationResult(
@@ -69,6 +76,7 @@ object ImageOptimizationUtils {
         )
     }
 
+    // Retorna dicas para melhorar resultados de OCR
     fun obterDicasOCR(): List<String> {
         return listOf(
             "Tire foto BEM PERTO do texto",
@@ -82,6 +90,7 @@ object ImageOptimizationUtils {
         )
     }
 
+    // Analisa possíveis problemas simples na imagem
     fun diagnosticarProblemas(bitmap: Bitmap): List<String> {
         val problemas = mutableListOf<String>()
 
@@ -99,12 +108,14 @@ object ImageOptimizationUtils {
         return problemas
     }
 
+    // Resultado da validação da imagem
     data class ValidationResult(
         val isValid: Boolean,
         val message: String,
         val severity: Severity
     )
 
+    // Nível de severidade da validação
     enum class Severity {
         INFO,
         WARNING,
