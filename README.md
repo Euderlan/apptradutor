@@ -1,5 +1,6 @@
 # Manual de Execução — AppTradutor (Android Studio)
-
+### Disciplina: Processamento de imagens
+### Discente: Euderlan Freire da Silva Abreu
 <div align="center">
   <img 
     src="docs/images/tela_apptradutor.jpg"
