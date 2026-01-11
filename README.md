@@ -121,7 +121,7 @@ O app solicita as seguintes permissões:
 - Acesso à câmera
 - Acesso à galeria de imagens
 - Acesso à internet
-- Funciona Office (Biblioteca mlkit)
+- Funciona Offline (Biblioteca mlkit)
 
 > **ℹInformação:** A tradução funciona através da API **MyMemory** (serviço online)
 
