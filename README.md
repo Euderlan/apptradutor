@@ -5,12 +5,12 @@
   <img 
     src="docs/images/tela_apptradutor.jpg"
     alt="Tela inicial do AppTradutor"
-    width="45%"
+    width="35%"
   />
   <img 
     src="docs/images/tela_extrair_apptradutor.jpg"
     alt="Tela de extração de texto do AppTradutor"
-    width="45%"
+    width="35%"
   />
 </div>
 
