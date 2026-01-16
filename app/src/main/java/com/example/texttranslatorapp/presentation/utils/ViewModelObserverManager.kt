@@ -10,6 +10,14 @@ import androidx.lifecycle.lifecycleScope
 import com.example.texttranslatorapp.presentation.viewmodel.TranslatorViewModel
 import kotlinx.coroutines.launch
 
+/**
+ * Responsável por observar os estados expostos pelo ViewModel e refletir
+ * automaticamente essas mudanças na interface do usuário.
+ *
+ * Essa classe conecta os Fluxos do ViewModel (texto extraído, idiomas,
+ * tradução, loading e erros) aos componentes de UI, mantendo a Activity
+ * livre de lógica de observação e sincronização.
+ */
 class ViewModelObserverManager(
     private val activity: AppCompatActivity,
     private val viewModel: TranslatorViewModel,

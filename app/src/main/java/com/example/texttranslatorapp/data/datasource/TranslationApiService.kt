@@ -6,8 +6,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.URLEncoder
 
+/**
+ * Serviço de tradução online utilizando a API pública MyMemory.
+ *
+ * Indicado como fallback ou complemento da tradução offline (ML Kit),
+ * especialmente para idiomas não suportados localmente.
+ */
 class TranslationApiService {
 
+    /**
+     * Realiza a tradução do texto via requisição HTTP.
+     *
+     * Executa em Dispatcher.IO por envolver rede e I/O bloqueante.
+     */
     suspend fun translate(
         text: String,
         sourceLanguage: String,
@@ -15,28 +26,36 @@ class TranslationApiService {
     ): TranslationResult {
         return withContext(Dispatchers.IO) {
             try {
-                // Converter nomes para códigos de idioma
+                // Converte os nomes exibidos no app para códigos de idioma da API
                 val sourceLangCode = getLanguageCode(sourceLanguage)
                 val targetLangCode = getLanguageCode(targetLanguage)
 
-                // URL da API de tradução (MyMemory - Grátis)
+                // Codifica o texto para evitar problemas com espaços e caracteres especiais
                 val encodedText = URLEncoder.encode(text, "UTF-8")
-                val url = "https://api.mymemory.translated.net/get?q=$encodedText&langpair=$sourceLangCode|$targetLangCode"
 
-                // Fazer requisição
-                val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+                // Endpoint da API MyMemory no formato esperado
+                val url =
+                    "https://api.mymemory.translated.net/get?q=$encodedText&langpair=$sourceLangCode|$targetLangCode"
+
+                // Cria e configura a conexão HTTP manualmente
+                val connection =
+                    java.net.URL(url).openConnection() as java.net.HttpURLConnection
                 connection.requestMethod = "GET"
                 connection.connectTimeout = 5000
                 connection.readTimeout = 5000
 
                 val responseCode = connection.responseCode
                 if (responseCode == 200) {
-                    val response = connection.inputStream.bufferedReader().use { it.readText() }
+                    // Lê a resposta completa da API
+                    val response = connection.inputStream
+                        .bufferedReader()
+                        .use { it.readText() }
 
-                    // Parse JSON simples
+                    // Extrai o campo translatedText do JSON retornado
                     var translatedText = extractTranslatedText(response)
 
-                    // Decodificar Unicode escapado se necessário
+                    // Algumas respostas vêm com Unicode escapado (ex: \u00e7)
+                    // Esse passo garante texto legível ao usuário
                     if (UnicodeDecoder.hasEscapedUnicode(translatedText)) {
                         translatedText = UnicodeDecoder.decode(translatedText)
                     }
@@ -48,18 +67,26 @@ class TranslationApiService {
                         targetLanguage = targetLanguage
                     )
                 } else {
+                    // Erro HTTP explícito (timeout, limite de requisições, etc.)
                     throw Exception("Erro na tradução: código $responseCode")
                 }
             } catch (e: Exception) {
+                // Encapsula erros de rede, parsing ou conversão
                 throw Exception("Erro ao traduzir: ${e.message}")
             }
         }
     }
 
+    /**
+     * Extrai manualmente o valor do campo "translatedText" do JSON retornado.
+     *
+     * Implementação simples para evitar dependência de bibliotecas de parsing.
+     * Depende da estrutura atual da resposta da API.
+     */
     private fun extractTranslatedText(jsonResponse: String): String {
         return try {
-            // Extrair o valor de "translatedText" do JSON
-            val startIndex = jsonResponse.indexOf("\"translatedText\":\"") + 18
+            val startIndex =
+                jsonResponse.indexOf("\"translatedText\":\"") + 18
             val endIndex = jsonResponse.indexOf("\"", startIndex)
 
             if (startIndex > 18 && endIndex > startIndex) {
@@ -74,6 +101,10 @@ class TranslationApiService {
         }
     }
 
+    /**
+     * Mapeia os nomes de idiomas exibidos no app
+     * para os códigos aceitos pela API MyMemory.
+     */
     private fun getLanguageCode(languageName: String): String {
         return when (languageName.lowercase()) {
             "português", "pt" -> "pt"
@@ -85,7 +116,7 @@ class TranslationApiService {
             "japonês", "ja" -> "ja"
             "chinês", "zh" -> "zh"
             "russo", "ru" -> "ru"
-            else -> "en"
+            else -> "en" // fallback padrão da API
         }
     }
 }

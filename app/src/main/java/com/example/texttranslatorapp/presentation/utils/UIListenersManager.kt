@@ -7,6 +7,12 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.texttranslatorapp.presentation.viewmodel.TranslatorViewModel
 
+/**
+ * Responsável por centralizar a configuração dos listeners da interface do usuário.
+ *
+ * Essa classe conecta as ações da UI (cliques em botões e containers)
+ * às operações do ViewModel, mantendo a Activity sem lógica de negócio.
+ */
 class UIListenersManager(
     private val activity: AppCompatActivity,
     // ViewModel para acionar ações de negócio a partir da UI

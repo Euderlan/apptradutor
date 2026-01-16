@@ -6,7 +6,10 @@ import android.util.Log
 import com.example.texttranslatorapp.data.datasource.MLKitTextExtractorMultilingual
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
+/**
+ * Responsável por extrair texto de uma região específica da imagem
+ * a partir de um retângulo de seleção definido pelo usuário.
+ */
 class TextExtractionHelper(
     private val textExtractor: MLKitTextExtractorMultilingual
 ) {

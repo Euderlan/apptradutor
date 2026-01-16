@@ -7,6 +7,10 @@ import android.text.TextWatcher
 import android.widget.EditText
 import com.example.texttranslatorapp.presentation.viewmodel.TranslatorViewModel
 
+/**
+ * observa mudanças de texto feitas pelo usuário e, usando debounce,
+ * atualiza o ViewModel apenas após um intervalo, evitando múltiplas atualizações desnecessárias.
+ */
 class TextWatcherDebounceManager(
     private val viewModel: TranslatorViewModel,
     // Tempo de espera antes de propagar a mudança de texto (debounce)

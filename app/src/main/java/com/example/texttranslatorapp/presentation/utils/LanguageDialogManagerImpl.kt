@@ -5,6 +5,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import com.example.texttranslatorapp.presentation.viewmodel.TranslatorViewModel
 
+// Essa classe cuida exclusivamente da escolha de idiomas pelo usuário e garante que a seleção reflita corretamente na tela e na lógica do app.
 class LanguageDialogManagerImpl(
     private val context: Context,
     // ViewModel usado para atualizar o estado global de idiomas
