@@ -64,7 +64,7 @@ cd apptradutor
 5. Conclua a configuração e inicie o emulador com o botão **▶**
 
 ### Executar o App 
-### Pule para topico 5 para usar no celular
+### DICA: Pule para topico 5 para usar no celular
 
 1. No topo do Android Studio, selecione o emulador como dispositivo
 2. Clique no botão **Run** (▶)
@@ -113,6 +113,7 @@ No seu celular Android:
     - Extrair o texto da imagem inteira
     - Extrair apenas uma seleção específica
 4. Clique em **Traduzir** para traduzir o texto extraído
+5.  Para usar Offline deve primeiro ter acesso a internet e testa algum exemplo no idioma escolhido
 
 ### Permissões Necessárias
 
@@ -155,3 +156,6 @@ Se encontrar problemas:
 - **Câmera não funciona no emulador**: Use um celular físico ou configure a câmera virtual
 - **Permissões negadas**: Verifique se o dispositivo aceitou as permissões na instalação
 - **Erro de conexão à internet**: Certifique-se de que o dispositivo tem conexão de rede ativa
+  
+## Suporte
+- Email: euderlan.freire@discente.ufma.br
